@@ -1,2266 +1,815 @@
 <!DOCTYPE html>
-<html lang="es" class="light">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador y Evaluador de Convenios Públicos | Camargo Group - BCP</title>
+  <title>Módulo Perfil Crediticio - Crédito Convenio</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
           colors: {
             bcp: {
-              blue: '#002A8F',
-              dark: '#001B5E',
-              orange: '#FF7800',
-              orangeHover: '#E66A00'
+              navy: '#002A54',
+              blue: '#005696',
+              lightBlue: '#C5DDF2',
+              iceBg: '#F3F8FD',
+              rowOdd: '#FFFFFF',
+              rowEven: '#EAF3FB',
+              accent: '#FF7800',
+              passGreen: '#168038',
+              failRed: '#DC2626',
+              borderSky: '#96BEE6'
             }
           }
         }
       }
     }
   </script>
-  <!-- SheetJS para procesar y exportar archivos Excel -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
   <style>
-    :root {
-      --bcp-blue: #002A8F;
-      --bcp-blue-dark: #001B5E;
-      --bcp-orange: #FF7800;
-      --bcp-bg: #F4F7FC;
+    .bcp-table-border {
+      border: 1px solid #99c2ea;
     }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      user-select: none;
-      -webkit-user-select: none;
-      transition: background-color 0.3s ease, color 0.3s ease;
+    .bcp-header-box {
+      background-color: #CCE2F7;
+      border: 1px solid #84B3E0;
     }
-
-    /* Logo 3D Camargo Group */
-    .logo-badge-3d {
-      display: inline-flex;
-      align-items: center;
-      padding: 5px 12px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #ffffff 0%, #f4f6fa 100%);
-      box-shadow: 0 4px 14px rgba(0, 42, 143, 0.12), inset 0 1px 1px #fff;
-      border: 1px solid rgba(226, 232, 240, 0.8);
-      transition: all 0.3s ease;
+    .check-icon {
+      color: #1a8738;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
     }
-    .dark .logo-badge-3d {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      border-color: rgba(51, 65, 85, 0.8);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-    }
-    .logo-badge-3d:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 18px rgba(0, 42, 143, 0.2);
-    }
-    .cube-3d-cluster {
-      position: relative;
-      width: 36px;
-      height: 32px;
-      margin-right: 8px;
-    }
-    .c-box { position: absolute; border-radius: 2.5px; }
-    .c-box-brown { top: 0px; left: 11px; width: 14px; height: 14px; background: linear-gradient(135deg, #743431, #4a211f); box-shadow: 1.5px 1.5px 4px rgba(0,0,0,0.25); }
-    .c-box-red { top: 10px; left: 0px; width: 15px; height: 15px; background: linear-gradient(135deg, #c72527, #8b1214); box-shadow: 1.5px 2px 5px rgba(0,0,0,0.3); }
-    .c-box-blue { top: 10px; left: 15px; width: 11px; height: 10px; background: linear-gradient(135deg, #2b6cb0, #1a4473); box-shadow: 1px 1.5px 3px rgba(0,0,0,0.2); }
-    .c-box-white { top: 18px; left: 14px; width: 12px; height: 12px; background: linear-gradient(135deg, #ffffff, #cbd5e1); box-shadow: 1px 1.5px 3px rgba(0,0,0,0.15); }
-    
-    .brand-title-3d {
+    .cross-icon {
+      color: #df2424;
       font-weight: 900;
-      letter-spacing: 0.5px;
-      font-size: 13px;
-      line-height: 1.1;
-      color: #002A8F;
-      border-bottom: 2px solid #001B5E;
-      padding-bottom: 1px;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
     }
-    .dark .brand-title-3d {
-      color: #60a5fa;
-      border-bottom-color: #3b82f6;
+    .filter-clickable {
+      cursor: pointer;
+      transition: background-color 0.15s ease;
     }
-    .brand-sub-3d {
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      font-size: 7.5px;
-      color: #c72527;
-      text-transform: uppercase;
+    .filter-clickable:hover {
+      background-color: #dbeafe !important;
     }
-    .dark .brand-sub-3d {
-      color: #f87171;
+    /* Pulse for trainer focus */
+    @keyframes pulseFocus {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
     }
-
-    /* Insignia 3D BCP */
-    .bcp-badge-3d {
-      display: inline-flex;
-      align-items: center;
-      padding: 5px 12px;
-      border-radius: 12px;
-      background: linear-gradient(145deg, #ffffff 0%, #f6f9fe 60%, #eaf1fa 100%);
-      box-shadow: 0 6px 14px -3px rgba(0, 42, 143, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.95);
-      border: 1px solid rgba(219, 234, 254, 0.9);
-      transition: all 0.3s ease;
+    .highlight-fail {
+      animation: pulseFocus 1.5s infinite;
+      background-color: #fee2e2 !important;
     }
-    .dark .bcp-badge-3d {
-      background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
-      border-color: rgba(59, 130, 246, 0.3);
-      box-shadow: 0 6px 14px -3px rgba(0, 0, 0, 0.4);
-    }
-    .bcp-badge-3d:hover {
-      transform: translateY(-1.5px) scale(1.02);
-      box-shadow: 0 10px 20px -3px rgba(0, 42, 143, 0.28);
-    }
-    .bcp-logo-img {
-      height: 24px;
-      width: auto;
-      object-fit: contain;
-      filter: drop-shadow(0 2px 3px rgba(0, 42, 143, 0.25));
-    }
-
-    .btn-bcp-orange {
-      background: linear-gradient(180deg, #FF8412 0%, #FF6800 100%);
-      box-shadow: 0 4px 12px rgba(255, 120, 0, 0.3);
-      transition: all 0.2s ease;
-    }
-    .btn-bcp-orange:hover {
-      background: linear-gradient(180deg, #FF9026 0%, #E65E00 100%);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(255, 120, 0, 0.4);
-    }
-
-    @keyframes floatMascot {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
-    }
-    .animate-mascot { animation: floatMascot 3.5s ease-in-out infinite; }
-
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 4px 14px rgba(16, 185, 129, 0.15); }
-      50% { box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35); }
-    }
-    .glow-califica { animation: pulseGlow 2.5s infinite; }
-
-    .badge-califica { background: #ECFDF5; color: #047857; border: 1.5px solid #10B981; }
-    .badge-liquidez { background: #FEF2F2; color: #B91C1C; border: 1.5px solid #F87171; }
-    .badge-sobreendeudado { background: #FFFBEB; color: #B45309; border: 1.5px solid #F59E0B; }
-
-    .dark .badge-califica { background: #064e3b; color: #6ee7b7; border-color: #059669; }
-    .dark .badge-liquidez { background: #7f1d1d; color: #fca5a5; border-color: #dc2626; }
-    .dark .badge-sobreendeudado { background: #78350f; color: #fcd34d; border-color: #d97706; }
-
-    /* Mascot Camarguito Avatar */
-    .camarguito-avatar {
-      position: relative;
-      width: 58px;
-      height: 58px;
-      background: radial-gradient(circle at 35% 30%, #FFE0B2 0%, #FFB74D 45%, #E65100 100%);
-      border-radius: 50%;
-      border: 2.5px solid #FFFFFF;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    }
-    .camarguito-ear-l, .camarguito-ear-r {
-      position: absolute;
-      top: -2px;
-      width: 17px;
-      height: 17px;
-      background: #D84315;
-      border-radius: 50%;
-      border: 1.5px solid #FFFFFF;
-    }
-    .camarguito-ear-l { left: 3px; }
-    .camarguito-ear-r { right: 3px; }
-    .camarguito-face {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .camarguito-eyes { display: flex; gap: 11px; margin-top: 6px; }
-    .camarguito-eye {
-      width: 7px;
-      height: 9px;
-      background: #212121;
-      border-radius: 50%;
-      position: relative;
-    }
-    .camarguito-eye::after {
-      content: '';
-      position: absolute;
-      top: 1.5px;
-      left: 1.5px;
-      width: 2.5px;
-      height: 2.5px;
-      background: #FFF;
-      border-radius: 50%;
-    }
-    .camarguito-nose { width: 8px; height: 4px; background: #8D6E63; border-radius: 50%; margin-top: 2px; }
-    .camarguito-cheeks { display: flex; gap: 26px; margin-top: -5px; }
-    .camarguito-cheek { width: 8px; height: 5px; background: #FF8A80; border-radius: 50%; opacity: 0.8; }
-    .camarguito-teeth { width: 6px; height: 4px; background: #FFFFFF; border-radius: 0 0 2px 2px; margin-top: 1px; border: 0.5px solid #D7CCC8; }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-card { animation: fadeInUp 0.35s ease-out forwards; }
   </style>
 </head>
-<body class="bg-[#F4F7FC] dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between" oncontextmenu="return false;">
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
 
-  <!-- Contenedor Principal -->
-  <div>
-    <!-- Cintillo Superior Oficial BCP -->
-    <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-pink-700 text-white text-[11px] font-semibold py-1.5 px-4 text-center tracking-wide flex justify-center items-center gap-2 shadow-inner">
-      <span>✨ Alianza Oficial Convenios Públicos | Camargo Group</span>
-      <span class="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">Campaña Activa 28.10.2026</span>
-    </div>
-
-    <!-- Header Principal -->
-    <header class="bg-white dark:bg-slate-900 shadow-sm border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 transition-colors">
-      <div class="max-w-7xl mx-auto px-4 py-2 flex flex-wrap justify-between items-center gap-4">
-        
-        <!-- Logos Co-Branding -->
-        <div class="flex items-center gap-3">
-          <div class="logo-badge-3d cursor-pointer select-none">
-            <div class="cube-3d-cluster">
-              <div class="c-box c-box-brown"></div>
-              <div class="c-box c-box-red"></div>
-              <div class="c-box c-box-blue"></div>
-              <div class="c-box c-box-white"></div>
-            </div>
-            <div>
-              <div class="brand-title-3d">CAMARGO GROUP</div>
-              <div class="brand-sub-3d">OUTSOURCING</div>
-            </div>
-          </div>
-
-          <span class="text-slate-300 dark:text-slate-700 font-light text-xl">×</span>
-
-          <div class="bcp-badge-3d select-none cursor-pointer" title="Canal Oficial BCP Convenios">
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIEAAAAtCAYAAACJfgjFAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAZVSURBVHhe7Zo9bNtGFMf/KRoUKAqlBlwUsCKEzlRARYcEKqApEhrEYzwkWS0B7lB7y5DFg+nBS4ZuzmIDotc6g4xONmJYAQq4jepMVTo1YurIUwAlQpaigzqQjyYf3/HD+kjc3A8QLN6d6Lt7/3vv3ZHn+v1+H5oPmo94gebDQ4tAo0Wg0SLQaBFooEWggRaBBloEGmgRaKBFoIEWgQZaBBoAOPd/eIBkd3oAACOb4VWnwu70YB+/gd3p4cVxD5emnPsa2QxKhRxvfuY5UyJoNI+wsvYrAHhG4pAQKrN5XCtcTGW0lQcHaDx5iUbziFd5GNkMKrN5zN3MB0TXaB5hs/4Mdqcn/t7IZmBMXXD+ZjNYXijyJu+MsYrA7vSwud0CgNAkJqG6tAOr7vw+KZXZPGqrM7w4QKN5hOrSjigqFUY2g/buvHedtm8kpigx0HxdmnLajoqxiaDRPEK5suVdG9kMmvf+xeT1HwLtopi+sZHKUAQ3mB+r3kJ1aYcXJ2Lfuu15mtP2zVwsikLgorLmP8HcN6+A75YD7YbBWBJDLgC4Kv/j90Pg/jTQtQN1KqRJrszmYS4WUZnNK1eLykUnEQC5b8lrGVMXvO9S3yiHoI+EuXYQ6lu5shXyKht7b4FHJrC3EigfBmMRAcVxzvbzi44A1suxg+OTAneSa6szWF4oorY6g9rqDNq786LBHjdfBq4pBEgY2QzMxSL6rbto784HPrXVGc+g9H+kvgHA8kIR+9Zt79PenRfF4O9bo3kUEgUA/NI+j9dfFB0h3J/m1QMxchFIKyRE1wYOrUghcCMCECeUYi2H90MlzFIhh/buvOii6d5k1Dh4/0i0nMaTk7HZnZ4oYgB4hS+dL117qEIYuQiMbAb71m3UVmeUgwN8Qnje4DWAu0I41woXeRHAJpXwt7XqLfF+1Nck+A0sCRQ+T8HLpHKiMpvHfu0OzMWwCD/79PzJxRCFMHIRENLgvp58G2iDrg08rIo5Al/JEFYaFAbm3mGz/ixQT0irNAn8/8Edrwo+Fi4Kw91C8tA22f0t0M6brwEZmwjgGxwJ4drkX7yJMzAWFlQxd3PbMbhVb2HlwQGmb2yE4ryRzWC/didQpjKaJKokcKMiwktJY1G1pb6TED7u/c2bRHrPpIxVBAQlcsY/T3mVAxvUi+PwJMPNrMuVLVSXdmCuHQSMYbjJHV9NkhEQYYg4VPeTBGV3eiGRQtGWICH8qU6XgPZjXKKdyICAKjkmrKy4XoDH9JKi4I8jpTcqeJ3lPuOQnU/+/jNyfdOz/NUHHOxGAoHHCObwVfdn3nxCUL4TMPYDotCRJ0PTBjAvbZ3eS7/Y6A6KdydQjiEoXaqw6Q4VIdE9D+lOqJUyCVLRA+t6Nh/qwZcrfDSxLwbT7BeVgsACJyKSfEbgLdvp52HtJJpBfqR7uc/9EmLysh2p6esQxoBJEn+Lpd4SSrGL4KH1VDMDzBhBFQtTWSpkIPhbrVKhZz3fEDaVln1VjBXEAzud91p4B4lCZSrJBZA3DbwVs2ZswEYrwjWy45rUzFhAN/vB4qkmKuKoXM3w94ACYwsCe208L6RWMnwqoOoEM8b8QK4WhkoDBDjEQEpOs4DCKqW3Lcqk+cGIPxGLn0r/5aHjSRIAi0Vcui37nofClvLC8XIXUCAvRVnwURxueTM1xAYrQhozx+VBMLnAYTYJq1S1WSq3LO/vUpAPGxI8Po0Ak0Erf5HJq8Jct0MecxBGJ0IDq1kA7pccnYCQlxTGZWveEoApT04uWPv2n2xg2N3eihXfxI9gmqLx0WBCIHGsl6OT5jh5gBDfpw8ui1ikqTmuhk5IOkRNNw9vZHNeBm4tCIJ/zN/wkr6CHnqQuDelIAi4h791l1elIy9legFQ95SWCyDMjpPENVpWv0RAoAik4drAHPtQHxO4Mf/2NcPvYMQRZy4pHxA2qYm5sqcsyg4E4ZTrvCWw2B0noDo2k6se/3Cub4yl2ow0uFOHIb7yFYSAGG7r26Za2H3ryLuTSLJ66SmawNPN53vn18aSvYfx+hFMCBkrKQvgKZ9uZTifZTQDPcY2r/S+Slm4sOf95D3XgR++MqDkCSeFro3FxodTPmx3VfS/W3OMmdKBJrRMLrEUHNm0CLQaBFotAg0WgQaaBFooEWgAYD/AKmdMqYuS/ZvAAAAAElFTkSuQmCC" alt="BCP" class="bcp-logo-img">
-          </div>
-
-          <div class="ml-3 pl-3 border-l border-slate-200 dark:border-slate-800 hidden md:block">
-            <span class="text-xs font-bold text-[#002A8F] dark:text-blue-400 block">Evaluador Oficial de Convenios</span>
-            <span class="text-[10px] text-slate-400 dark:text-slate-500">Canal Certificado 2026</span>
-          </div>
+  <header class="bg-bcp-navy text-white px-4 py-3 shadow-md border-b-4 border-bcp-accent sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="bg-white/10 p-2 rounded-lg text-amber-400">
+          <i class="fa-solid fa-id-card-clip text-xl"></i>
         </div>
-
-        <!-- Selector de Pestañas, Dark Mode Toggle y Autoría -->
-        <div class="flex items-center gap-3">
-          <button id="btnDarkMode" onclick="toggleDarkMode()" class="p-2 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-amber-400 hover:scale-105 transition-all text-xs flex items-center justify-center w-8 h-8" title="Alternar Modo Oscuro / Claro">
-            <i id="darkIcon" class="fa-solid fa-moon"></i>
-          </button>
-
-          <div class="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] text-slate-500 dark:text-slate-400 shadow-sm">
-            <i class="fa-solid fa-code text-[#002A8F] dark:text-blue-400"></i>
-            <span>Por: <strong class="text-slate-700 dark:text-slate-200">Luis Angel Garcia C. (Lattis)</strong></span>
-          </div>
-
-          <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700">
-            <button id="btnTabSimulador" onclick="switchTab('simulador')" class="px-4 py-1.5 rounded-full text-xs font-bold bg-[#002A8F] text-white shadow-sm transition-all duration-200 flex items-center">
-              <i class="fa-solid fa-calculator mr-1.5 text-orange-400"></i> Individual
-            </button>
-            <button id="btnTabMasivo" onclick="switchTab('masivo')" class="px-4 py-1.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-[#002A8F] dark:hover:text-blue-400 transition-all duration-200 flex items-center">
-              <i class="fa-solid fa-file-excel mr-1.5 text-emerald-600 dark:text-emerald-400"></i> Masivo (Excel)
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </header>
-
-    <!-- Banner Superior -->
-    <div class="bg-gradient-to-r from-[#EBF3FC] via-[#F4F8FE] to-[#FFF3E8] dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/80 border-b border-blue-100/60 dark:border-slate-800 py-3.5 px-4 shadow-sm transition-colors">
-      <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h2 class="text-lg md:text-xl font-black text-[#002A8F] dark:text-blue-400 tracking-tight">Evaluación y Simulación Oficial de Convenios</h2>
-          <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">Calcula con precisión cronograma financiero BCP, cuotas con periodo de gracia y capacidad de pago.</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="abrirCamarguitoManual()" class="btn-bcp-orange text-white text-xs font-bold px-4 py-2 rounded-full flex items-center gap-1.5 shadow-sm">
-            <i class="fa-solid fa-comments"></i> Consejos de Camarguito
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <main class="max-w-7xl mx-auto px-4 py-6">
-
-      <!-- ================= TAB 1: EVALUADOR INDIVIDUAL ================= -->
-      <div id="tabSimulador" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-        <!-- Panel Izquierdo: Parámetros del Cliente y Boleta -->
-        <div class="lg:col-span-4 space-y-5">
-          
-          <!-- Tarjeta Convenio -->
-          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 hover:shadow-md transition duration-300 animate-card">
-            <h2 class="text-sm font-bold text-[#002A8F] dark:text-blue-400 mb-3 flex items-center">
-              <i class="fa-solid fa-building-columns text-[#FF7800] mr-2 text-base"></i> Convenio y Cargo Laboral
-            </h2>
-            
-            <div class="space-y-3">
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Convenio Público</label>
-                <select id="selConvenio" class="w-full text-xs font-medium border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 focus:ring-2 focus:ring-[#002A8F] dark:focus:ring-blue-500 focus:outline-none bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 transition"></select>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Cargo Laboral Oficial</label>
-                <select id="selCargo" class="w-full text-xs font-medium border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 focus:ring-2 focus:ring-[#002A8F] dark:focus:ring-blue-500 focus:outline-none bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 transition"></select>
-              </div>
-
-              <!-- Indicadores: RCI, Reserva, TEA Base y PG SCC -->
-              <div class="grid grid-cols-4 gap-2 pt-2 text-center text-xs">
-                <div class="bg-blue-50/60 dark:bg-blue-950/40 p-2 rounded-xl border border-blue-100 dark:border-blue-900/50">
-                  <span class="text-slate-500 dark:text-slate-400 block text-[9px] font-bold uppercase">RCI</span>
-                  <span id="lblRCI" class="font-extrabold text-[#002A8F] dark:text-blue-400 text-xs sm:text-sm">42%</span>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-800/80 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
-                  <span class="text-slate-500 dark:text-slate-400 block text-[9px] font-bold uppercase">Reserva</span>
-                  <span id="lblReserva" class="font-extrabold text-slate-700 dark:text-slate-200 text-xs sm:text-sm">S/ 0.00</span>
-                </div>
-                <div class="bg-orange-50/60 dark:bg-amber-950/30 p-2 rounded-xl border border-orange-100 dark:border-amber-900/50">
-                  <span class="text-slate-500 dark:text-slate-400 block text-[9px] font-bold uppercase">TEA Base</span>
-                  <span id="lblTEA" class="font-extrabold text-[#FF7800] dark:text-orange-400 text-xs sm:text-sm">11.00%</span>
-                </div>
-                <!-- PG (Solo equipo SCC) -->
-                <div class="bg-indigo-50/60 dark:bg-indigo-950/40 p-2 rounded-xl border border-indigo-100 dark:border-indigo-900/50" title="Periodo de gracia calculado para el equipo SCC según fecha de desembolso y corte">
-                  <span class="text-slate-500 dark:text-slate-400 block text-[9px] font-bold uppercase">PG (SCC)</span>
-                  <span id="lblPGSCC" class="font-extrabold text-indigo-700 dark:text-indigo-400 text-xs sm:text-sm">1 mes</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tarjeta Ingresos de Boleta -->
-          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 hover:shadow-md transition duration-300 animate-card">
-            <h2 class="text-sm font-bold text-[#002A8F] dark:text-blue-400 mb-3 flex items-center">
-              <i class="fa-solid fa-money-check-dollar text-emerald-600 dark:text-emerald-400 mr-2 text-base"></i> Ingresos de Boleta
-            </h2>
-
-            <div class="space-y-3 text-xs">
-              <div>
-                <label class="block font-semibold text-slate-600 dark:text-slate-300">Total Ingresos Fijos (Bruto)</label>
-                <div class="relative mt-1">
-                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 dark:text-slate-500 font-bold">S/</span>
-                  <input type="number" id="inpIngresos" value="3264.19" step="0.01" class="w-full pl-8 pr-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-emerald-500 transition">
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-slate-600 dark:text-slate-300">Ingreso Var. Mensual</label>
-                  <input type="number" id="inpVarMes" value="0" step="0.01" class="w-full mt-1 p-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                </div>
-                <div>
-                  <label class="block text-slate-600 dark:text-slate-300">Prom. Variables (3m)</label>
-                  <input type="number" id="inpVar3m" value="0" step="0.01" class="w-full mt-1 p-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-slate-600 dark:text-slate-300">Otros Fijos (CAFAE)</label>
-                  <input type="number" id="inpCafae" value="0" step="0.01" class="w-full mt-1 p-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                </div>
-                <div>
-                  <label class="block text-slate-600 dark:text-slate-300">No Constantes</label>
-                  <input type="number" id="inpNoConstantes" value="0" step="0.01" class="w-full mt-1 p-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tarjeta Descuentos de Boleta -->
-          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 hover:shadow-md transition duration-300 animate-card">
-            <h2 class="text-sm font-bold text-[#002A8F] dark:text-blue-400 mb-3 flex items-center">
-              <i class="fa-solid fa-receipt text-red-500 mr-2 text-base"></i> Descuentos de Boleta
-            </h2>
-
-            <div class="space-y-3 text-xs">
-              <div>
-                <label class="block font-semibold text-slate-600 dark:text-slate-300">Descuentos de Ley (ONP / AFP / IR)</label>
-                <div class="relative mt-1">
-                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 dark:text-slate-500 font-bold">S/</span>
-                  <input type="number" id="inpLey" value="424.34" step="0.01" class="w-full pl-8 pr-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-red-400 transition">
-                </div>
-              </div>
-
-              <div>
-                <label class="block font-semibold text-slate-600 dark:text-slate-300">Descuentos Facultativos</label>
-                <div class="relative mt-1">
-                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 dark:text-slate-500 font-bold">S/</span>
-                  <input type="number" id="inpFacultativos" value="101.58" step="0.01" class="w-full pl-8 pr-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-red-400 transition">
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Panel Central: Dictamen, Condiciones de Préstamo y Carga SBS -->
-        <div class="lg:col-span-8 space-y-5">
-          
-          <!-- Tarjeta de Dictamen de Calificación Interactiva -->
-          <div id="cardResultado" class="p-5 rounded-2xl shadow-md border flex flex-col sm:flex-row justify-between items-center gap-4 transition-all duration-300 glow-califica animate-card">
-            <div>
-              <div class="text-[11px] uppercase tracking-wider font-extrabold opacity-80" id="subResultado">Dictamen de Evaluación</div>
-              <div class="text-3xl font-black mt-0.5 tracking-tight" id="txtResultado">CALIFICA</div>
-              <p class="text-xs mt-1 max-w-md font-medium" id="detResultado">El cliente cuenta con liquidez suficiente en boleta y holgura en el sistema financiero.</p>
-            </div>
-            <div class="flex gap-2.5 text-right w-full sm:w-auto justify-end">
-              <div class="bg-white/95 dark:bg-slate-800/90 backdrop-blur-sm p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex-1 sm:flex-initial">
-                <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block">Neto Disponible</span>
-                <span id="resNetoDisp" class="text-base font-black text-slate-800 dark:text-slate-100">S/ 1,318.35</span>
-              </div>
-              <div class="bg-white/95 dark:bg-slate-800/90 backdrop-blur-sm p-3 rounded-xl border border-blue-200 dark:border-blue-900 shadow-sm flex-1 sm:flex-initial">
-                <span class="text-[10px] text-[#002A8F] dark:text-blue-400 uppercase font-bold block">Cuota Mensual</span>
-                <span id="resCuota" class="text-base font-black text-[#002A8F] dark:text-blue-400">S/ 1,317.98</span>
-              </div>
-              <div class="bg-white/95 dark:bg-slate-800/90 backdrop-blur-sm p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex-1 sm:flex-initial">
-                <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block">% Endeudamiento</span>
-                <span id="resEndeudamiento" class="text-base font-black text-amber-700 dark:text-amber-400">3.51%</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Condiciones del Préstamo -->
-          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 hover:shadow-md transition duration-300 animate-card">
-            <h2 class="text-sm font-bold text-[#002A8F] dark:text-blue-400 mb-3 flex items-center">
-              <i class="fa-solid fa-hand-holding-dollar text-[#FF7800] mr-2 text-base"></i> Condiciones del Préstamo Solicitado
-            </h2>
-
-            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs">
-              <div>
-                <label class="block font-semibold text-slate-600 dark:text-slate-300">Monto Solicitado</label>
-                <input type="number" id="inpMonto" value="66900" step="100" class="w-full mt-1 p-2 border border-blue-200 dark:border-blue-900/60 rounded-xl font-bold text-[#002A8F] dark:text-blue-400 bg-blue-50/40 dark:bg-blue-950/30 focus:ring-2 focus:ring-[#002A8F] dark:focus:ring-blue-500">
-              </div>
-
-              <div>
-                <label class="block font-semibold text-slate-600 dark:text-slate-300">Plazo</label>
-                <select id="selPlazo" class="w-full mt-1 p-2 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-[#002A8F] dark:focus:ring-blue-500">
-                  <option value="12">12 meses</option>
-                  <option value="24">24 meses</option>
-                  <option value="36">36 meses</option>
-                  <option value="48">48 meses</option>
-                  <option value="60">60 meses</option>
-                  <option value="72" selected>72 meses</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block font-semibold text-slate-600 dark:text-slate-300">TEA (%)</label>
-                <input type="number" id="inpTEA" value="11.00" step="0.01" class="w-full mt-1 p-2 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-[#002A8F] dark:focus:ring-blue-500">
-              </div>
-
-              <div>
-                <label class="block font-semibold text-slate-600 dark:text-slate-300">Desembolso</label>
-                <input type="date" id="inpFechaDesembolso" value="2026-10-07" class="w-full mt-1 p-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-[#002A8F] dark:focus:ring-blue-500">
-              </div>
-
-              <div>
-                <label class="block font-semibold text-slate-600 dark:text-slate-300">Desgravamen</label>
-                <select id="selDesgravamen" class="w-full mt-1 p-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-[#002A8F] dark:focus:ring-blue-500">
-                  <option value="0.000767">Sin Retorno (0.0767%)</option>
-                  <option value="0.000997">Con Retorno (0.0997%)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Resumen de Carga Crediticia -->
-          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 hover:shadow-md transition duration-300 animate-card">
-            <div class="flex justify-between items-center mb-3">
-              <h2 class="text-sm font-bold text-[#002A8F] dark:text-blue-400 flex items-center">
-                <i class="fa-solid fa-chart-pie text-indigo-600 dark:text-indigo-400 mr-2 text-base"></i> Resumen de Carga Crediticia (SBS / BCP)
-              </h2>
-              <span class="text-xs text-slate-500 dark:text-slate-400">Tope de endeudamiento: <strong id="lblTopeEndeudamiento" class="text-slate-800 dark:text-slate-200">65%</strong></span>
-            </div>
-
-            <div class="overflow-x-auto text-xs">
-              <table class="w-full border-collapse">
-                <thead>
-                  <tr class="bg-slate-50 dark:bg-slate-800 text-[#002A8F] dark:text-blue-300 text-center font-bold border-y border-slate-200 dark:border-slate-700">
-                    <th class="p-2.5 text-left font-bold text-slate-800 dark:text-slate-200">Tipo de Crédito</th>
-                    <th class="p-2.5 w-28">Deuda cuota BCP</th>
-                    <th class="p-2.5 w-28">Deuda cuota no BCP</th>
-                    <th class="p-2.5 w-28">Saldo</th>
-                    <th class="p-2.5 w-28">Saldo Actualizado</th>
-                    <th class="p-2.5 w-28 text-right">Cuota Actualizada</th>
-                  </tr>
-                </thead>
-                <tbody id="tblDeudasBody"></tbody>
-              </table>
-            </div>
-
-            <!-- Cierre de Indicadores SBS -->
-            <div class="mt-4 pt-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
-              <div class="flex items-center space-x-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                <span class="font-bold text-slate-600 dark:text-slate-400">% Endeudamiento:</span>
-                <span id="lblPorcEndeudamiento" class="font-extrabold text-slate-800 dark:text-slate-200 text-sm">3.51%</span>
-              </div>
-              <div class="flex items-center space-x-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                <span class="font-bold text-slate-600 dark:text-slate-400">CEM:</span>
-                <span id="lblCEM" class="font-black text-emerald-700 dark:text-emerald-400 text-sm">S/ 1,683.88</span>
-              </div>
-              <div class="flex items-center space-x-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                <span class="font-bold text-slate-600 dark:text-slate-400">Dictamen SBS:</span>
-                <span id="lblDictamenSBS" class="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">Continuar</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- ================= TAB 2: EVALUACIÓN MASIVA ================= -->
-      <div id="tabMasivo" class="hidden space-y-6">
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 animate-card">
-          <h2 class="text-base font-bold text-[#002A8F] dark:text-blue-400 mb-1 flex items-center">
-            <i class="fa-solid fa-cloud-arrow-up text-[#FF7800] mr-2"></i> Evaluación Masiva desde Archivo Excel / CSV
-          </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Carga el reporte de boletas para evaluar de golpe todas las solicitudes aplicando las reglas de RCI y cronograma financiero oficial.</p>
-
-          <div class="flex flex-wrap items-center gap-4">
-            <input type="file" id="inpExcelMasivo" accept=".xlsx, .xls, .csv" class="text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 dark:file:bg-blue-950 file:text-[#002A8F] dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900 cursor-pointer transition">
-            <button onclick="exportarExcelResultados()" class="btn-bcp-orange text-white rounded-full px-5 py-2.5 text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center">
-              <i class="fa-solid fa-file-export mr-2"></i> Descargar Reporte Calificado (.xlsx)
-            </button>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden animate-card">
-          <div class="p-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-            <h3 class="font-bold text-[#002A8F] dark:text-blue-300 text-xs uppercase tracking-wider">Resultados de Evaluación en Lote</h3>
-            <span id="lblContadorMasivo" class="text-xs font-bold px-3 py-1 bg-blue-100 dark:bg-blue-900/60 text-[#002A8F] dark:text-blue-300 rounded-full">0 Registros</span>
-          </div>
-          <div class="overflow-x-auto max-h-[500px]">
-            <table class="w-full text-xs text-left border-collapse" id="tblMasivo">
-              <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase tracking-wider sticky top-0 border-b border-slate-200 dark:border-slate-700">
-                <tr>
-                  <th class="p-3">DNI</th>
-                  <th class="p-3">Cliente</th>
-                  <th class="p-3">Convenio</th>
-                  <th class="p-3 text-right">Ingresos</th>
-                  <th class="p-3 text-right">Disponible</th>
-                  <th class="p-3 text-right">Monto</th>
-                  <th class="p-3 text-right">Cuota Exacta</th>
-                  <th class="p-3 text-center">Estado</th>
-                  <th class="p-3">Motivo / Detalle</th>
-                </tr>
-              </thead>
-              <tbody id="tblMasivoBody" class="divide-y divide-slate-100 dark:divide-slate-800">
-                <tr>
-                  <td colspan="9" class="p-8 text-center text-slate-400 dark:text-slate-500">Carga un archivo Excel para ver la evaluación en lote.</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <h1 class="text-base md:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            Capacitación: <span class="text-orange-400 font-semibold">Módulo Perfil Crediticio</span>
+          </h1>
+          <p class="text-xs text-slate-300">Filtros Básicos y Score de Crédito Efectivo / Convenio</p>
         </div>
       </div>
 
-    </main>
-  </div>
-
-  <!-- Footer -->
-  <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12 py-5 px-4 text-center transition-colors">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-      <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-        <span class="font-semibold text-slate-700 dark:text-slate-300">Sistema Seguro de Simulación Financiera</span>
-        <span class="text-slate-400 dark:text-slate-500">• v3.03 Oficial (28.10.2026)</span>
-      </div>
-
-      <div class="bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200/80 dark:border-slate-700 text-center sm:text-right">
-        <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold block tracking-wider">Arquitectura y Desarrollo:</span>
-        <span class="font-extrabold text-[#002A8F] dark:text-blue-400 text-xs">Luis Angel Garcia Cano (Lattis)</span>
-        <span class="text-slate-500 dark:text-slate-400 font-medium text-[11px] block">Analista Comercial - Back Office Senior</span>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ================= ASISTENTE VIRTUAL "CAMARGUITO" ================= -->
-  <div class="fixed bottom-4 right-4 z-40 flex items-end gap-2.5 select-none" id="camarguitoContainer">
-    
-    <div id="camarguitoBubble" class="bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-xl border border-blue-200 dark:border-slate-700 max-w-xs text-xs text-slate-700 dark:text-slate-200 animate-card relative hidden">
-      <div class="font-bold text-[#002A8F] dark:text-blue-400 flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800 mb-1.5">
-        <span class="flex items-center gap-1"><i class="fa-solid fa-sparkles text-amber-500"></i> Camarguito</span>
-        <button type="button" onclick="cerrarCamarguitoGlobo(event)" class="text-slate-400 hover:text-red-500 p-0.5 rounded transition" title="Cerrar mensaje">
-          <i class="fa-solid fa-xmark text-sm font-bold"></i>
+      <!-- Quick interactive controls -->
+      <div class="flex items-center gap-2 flex-wrap text-xs">
+        <button id="btnToggleQuiz" class="px-3 py-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-graduation-cap"></i> <span id="lblQuizToggle">Modo Preguntas al Equipo</span>
+        </button>
+        <button id="btnCheatSheet" class="px-3 py-1.5 font-semibold bg-blue-700 hover:bg-blue-800 text-white rounded-md transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-book-open"></i> Glosario de Filtros
+        </button>
+        <button id="btnFullScreen" class="px-3 py-1.5 font-medium bg-white/10 hover:bg-white/20 text-slate-200 rounded-md transition flex items-center gap-1">
+          <i class="fa-solid fa-expand"></i> Pantalla Completa
         </button>
       </div>
-      <p id="camarguitoText" class="leading-relaxed font-medium text-slate-600 dark:text-slate-300">¡Hola! Soy Camarguito. Te ayudo a validar que la cuota no supere el neto disponible y vigilar el ratio SBS.</p>
-      
-      <div class="mt-2 pt-1 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px] text-slate-400">
-        <span>Diseñado por Lattis</span>
-        <button type="button" onclick="cerrarCamarguitoGlobo(event)" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold">Entendido</button>
-      </div>
     </div>
+  </header>
 
-    <div onclick="clickAvatarCamarguito(event)" class="animate-mascot cursor-pointer group relative flex-shrink-0" title="Haz clic para ver la ayuda de Camarguito">
-      <div class="camarguito-ear-l"></div>
-      <div class="camarguito-ear-r"></div>
-      <div class="camarguito-avatar group-hover:scale-105 transition-transform duration-200">
-        <div class="camarguito-face">
-          <div class="camarguito-eyes">
-            <div class="camarguito-eye"></div>
-            <div class="camarguito-eye"></div>
-          </div>
-          <div class="camarguito-nose"></div>
-          <div class="camarguito-cheeks">
-            <div class="camarguito-cheek"></div>
-            <div class="camarguito-cheek"></div>
-          </div>
-          <div class="camarguito-teeth"></div>
+  <div class="bg-white border-b border-slate-200 px-4 py-2.5 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="font-bold text-slate-600 flex items-center gap-1.5">
+          <i class="fa-solid fa-sliders text-bcp-blue"></i> Seleccionar Escenario:
+        </span>
+        <div class="flex items-center gap-1 overflow-x-auto py-1 max-w-full">
+          <button onclick="loadScenario('ideal')" class="scenario-pill px-2.5 py-1 rounded border font-semibold transition bg-bcp-blue text-white border-bcp-blue" data-case="ideal">
+            🌟 Ideal (100% Aprobado)
+          </button>
+          <button onclick="loadScenario('no_score')" class="scenario-pill px-2.5 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300" data-case="no_score">
+            ⚠️ Filtros OK, Sin Score
+          </button>
+          <!-- Cases 1 to 10 from user slide -->
+          <div class="h-4 w-px bg-slate-300 mx-1"></div>
+          <span class="text-slate-400 font-semibold text-[11px]">Casos PPT:</span>
+          <button onclick="loadScenario(1)" class="scenario-pill px-2 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300" data-case="1">1</button>
+          <button onclick="loadScenario(2)" class="scenario-pill px-2 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300" data-case="2">2</button>
+          <button onclick="loadScenario(3)" class="scenario-pill px-2 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300" data-case="3">3</button>
+          <button onclick="loadScenario(4)" class="scenario-pill px-2 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300" data-case="4">4</button>
+          <button onclick="loadScenario(5)" class="scenario-pill px-2 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300" data-case="5">5</button>
+          <button onclick="loadScenario(6)" class="scenario-pill px-2 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300" data-case="6">6</button>
+          <button onclick="loadScenario(7)" class="scenario-pill px-2 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300" data-case="7">7</button>
+          <button onclick="loadScenario(8)" class="scenario-pill px-2 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300" data-case="8">8</button>
+          <button onclick="loadScenario(9)" class="scenario-pill px-2 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300" data-case="9">9</button>
+          <button onclick="loadScenario(10)" class="scenario-pill px-2 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300" data-case="10">10</button>
         </div>
       </div>
-      <span class="absolute -top-1.5 -right-1 bg-[#FF7800] text-white text-[8px] font-black px-1.5 py-0.5 rounded-full border border-white shadow">AYUDA</span>
-    </div>
 
+      <div class="flex items-center gap-1.5 self-end md:self-auto">
+        <button id="btnPrevCase" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-semibold transition">
+          <i class="fa-solid fa-chevron-left"></i> Ant.
+        </button>
+        <button id="btnNextCase" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-semibold transition">
+          Sig. <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- Modal Camarguito -->
-  <div id="modalCamarguito" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center p-4 hidden" onclick="cerrarModalFondo(event)">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-blue-100 dark:border-slate-800 animate-card relative" onclick="event.stopPropagation()">
-      <button onclick="toggleCamarguitoHelp()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg">
-        <i class="fa-solid fa-circle-xmark"></i>
+  <main class="flex-1 max-w-7xl w-full mx-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    
+    <!-- LEFT COLUMN: Authentic BCP Módulo Perfil Crediticio Screen -->
+    <section class="lg:col-span-7 bg-white rounded-xl shadow-md border border-slate-300 p-4 md:p-6 relative">
+      
+      <!-- Screen Top Metadata Header (Exact to screenshot) -->
+      <div class="flex justify-between items-start text-xs md:text-sm text-slate-800 mb-3 leading-relaxed">
+        <div class="space-y-1">
+          <div><strong class="font-bold">Tipo de documento</strong> <span class="ml-10 font-mono">DNI</span></div>
+          <div><strong class="font-bold">Numero de documento</strong> <span class="ml-5 font-mono" id="docNumber">4241329</span></div>
+          <div><strong class="font-bold">Fecha de Consulta:</strong> <span class="ml-9">Miércoles 23 Setiembre - 02:30 P.M.</span></div>
+          <div class="pt-1">
+            <button class="px-3 py-0.5 border border-slate-400 bg-slate-100 rounded text-xs text-slate-700 hover:bg-slate-200 font-medium">
+              Regresar
+            </button>
+          </div>
+        </div>
+
+        <div class="text-right">
+          <div class="font-bold text-slate-900 text-sm md:text-base">Cliente</div>
+          <div id="clientStatusBadge" class="mt-1 inline-block px-2.5 py-0.5 rounded text-xs font-bold bg-blue-100 text-bcp-blue border border-blue-200">
+            Convenio Activo
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Title Banner -->
+      <div class="text-center my-3 border-t border-slate-200 pt-3">
+        <h2 class="text-base md:text-xl font-bold tracking-wide text-blue-600 uppercase">
+          MÓDULO PERFIL CREDITICIO
+        </h2>
+      </div>
+
+      <!-- Table Section 1: Filtros Básicos -->
+      <div class="mt-4">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="font-bold italic text-sm md:text-base text-slate-900">
+            1.- Filtros Basicos
+          </div>
+          <span class="text-[11px] text-slate-500 italic hidden sm:inline">
+            <i class="fa-solid fa-hand-pointer text-blue-500"></i> Haz clic en cualquier filtro para ver su regla
+          </span>
+        </div>
+
+        <!-- Table 1 Container -->
+        <div class="bcp-table-border rounded overflow-hidden shadow-sm">
+          <!-- Table Header -->
+          <div class="grid grid-cols-12">
+            <div class="col-span-8 md:col-span-9 bg-white p-2"></div>
+            <div class="col-span-4 md:col-span-3 bcp-header-box p-2 text-center font-bold text-xs md:text-sm text-slate-800">
+              Crédito Convenio
+            </div>
+          </div>
+
+          <!-- 13 Basic Filters Rows -->
+          <div id="filtersContainer" class="text-xs md:text-sm divide-y divide-blue-100">
+            <!-- Dynamically generated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Section 2: Score Credito Efectivo y Convenio -->
+      <div class="mt-6">
+        <div class="font-bold italic text-sm md:text-base text-slate-900 mb-1.5">
+          2. Score Credito Efectivo y Convenio
+        </div>
+
+        <div class="bcp-table-border rounded overflow-hidden shadow-sm">
+          <!-- Score Rows -->
+          <div id="scoresContainer" class="text-xs md:text-sm divide-y divide-blue-100">
+            <!-- Dynamically generated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick indicator summary footer -->
+      <div class="mt-4 pt-3 border-t border-slate-200 flex flex-wrap justify-between items-center gap-2 text-xs">
+        <div class="flex items-center gap-3">
+          <span class="flex items-center gap-1 font-semibold text-slate-700">
+            <i class="fa-solid fa-check check-icon text-sm"></i> Cumple / Aprobado
+          </span>
+          <span class="flex items-center gap-1 font-semibold text-slate-700">
+            <i class="fa-solid fa-xmark cross-icon text-sm"></i> No Cumple / Bloqueante
+          </span>
+        </div>
+        <div class="text-slate-400 font-mono text-[11px]">
+          Filtros de Riesgo & Oferta BCP v4.2
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: Trainer Coaching Panel, Verdict & Interactive Tools -->
+    <section class="lg:col-span-5 flex flex-col gap-4">
+      
+      <!-- Verdict Card -->
+      <div id="verdictCard" class="bg-white rounded-xl shadow-md border-2 border-emerald-400 p-5 relative overflow-hidden transition-all duration-300">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Dictamen del Sistema</span>
+            <h3 id="verdictTitle" class="text-xl font-extrabold text-emerald-700 flex items-center gap-2">
+              <i id="verdictIcon" class="fa-solid fa-circle-check"></i>
+              <span>APROBADO PARA VENTA</span>
+            </h3>
+          </div>
+          <div id="verdictTag" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+            Viable 100%
+          </div>
+        </div>
+
+        <p id="verdictSummary" class="text-xs md:text-sm text-slate-700 mt-2 leading-relaxed">
+          El cliente supera con éxito los 13 Filtros Básicos y cuenta con Score positivo tanto para Línea Disponible/Retiro de Efectivo (LD/RE) como Compra de Deuda (CdD).
+        </p>
+
+        <!-- Metrics count -->
+        <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-100 text-xs">
+          <div class="bg-slate-50 p-2 rounded border border-slate-200">
+            <span class="text-slate-500 text-[10px] block uppercase font-bold">Filtros Básicos</span>
+            <span id="metricFilters" class="font-bold text-emerald-700 font-mono text-sm">13 de 13 aprobados</span>
+          </div>
+          <div class="bg-slate-50 p-2 rounded border border-slate-200">
+            <span class="text-slate-500 text-[10px] block uppercase font-bold">Score Comercial</span>
+            <span id="metricScores" class="font-bold text-emerald-700 font-mono text-sm">2 de 2 aprobados</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-md border border-slate-200 p-5">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2 text-brand-navy font-bold text-sm">
+            <div class="w-7 h-7 rounded-lg bg-orange-100 text-brand-orange flex items-center justify-center text-xs">
+              <i class="fa-solid fa-bullhorn text-amber-600"></i>
+            </div>
+            <span>Speech Coloquial para el Capacitador</span>
+          </div>
+          <button id="btnCopySpeech" class="px-2.5 py-1 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition flex items-center gap-1 shadow-sm">
+            <i class="fa-regular fa-copy"></i> Copiar
+          </button>
+        </div>
+
+        <!-- Speech dialog container -->
+        <div class="bg-gradient-to-br from-amber-50/70 to-orange-50/70 border border-orange-200 rounded-xl p-3.5 text-xs md:text-sm text-slate-700 leading-relaxed font-sans shadow-inner">
+          <p id="trainerSpeechText" class="italic">
+            <!-- Dynamic Speech -->
+          </p>
+        </div>
+
+        <!-- Coach Tip -->
+        <div class="mt-3 p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-900 flex items-start gap-2">
+          <i class="fa-solid fa-chalkboard-user text-blue-600 text-sm mt-0.5"></i>
+          <div>
+            <strong class="font-bold">Tip de Capacitación:</strong>
+            <span id="trainerTipText">Recuerda siempre verificar si la caída es por Filtro de Riesgo (SBS/BCP) o por Score de Campaña.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Quiz / Team Challenge Panel -->
+      <div id="quizPanel" class="hidden bg-slate-900 text-white rounded-xl shadow-lg border border-slate-700 p-5">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-amber-400 text-base"><i class="fa-solid fa-circle-question"></i></span>
+            <span class="font-bold text-sm">Pregunta en Vivo al Equipo</span>
+          </div>
+          <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono">Modo Participación</span>
+        </div>
+
+        <p class="text-xs text-slate-200 mb-3">
+          Pregunta a los participantes: <strong>"Observando esta pantalla, ¿este cliente califica para desembolsar su Crédito Convenio hoy?"</strong>
+        </p>
+
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <button onclick="testParticipantAnswer(true)" class="py-2.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-thumbs-up"></i> SÍ Califica
+          </button>
+          <button onclick="testParticipantAnswer(false)" class="py-2.5 px-3 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-thumbs-down"></i> NO Califica
+          </button>
+        </div>
+
+        <div id="quizAnswerFeedback" class="hidden p-3 rounded-lg text-xs leading-snug">
+          <!-- Feedback filled dynamically -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL: Detailed Definition of Filters (Cheat Sheet) -->
+  <div id="cheatSheetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative border border-slate-200 max-h-[85vh] flex flex-col">
+      <button id="btnCloseCheatSheet" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition">
+        <i class="fa-solid fa-xmark"></i>
       </button>
 
-      <div class="flex items-center gap-3 mb-4">
-        <div class="camarguito-avatar" style="width: 48px; height: 48px;">
-          <div class="camarguito-face" style="transform: scale(0.65);">
-            <div class="camarguito-eyes">
-              <div class="camarguito-eye"></div>
-              <div class="camarguito-eye"></div>
-            </div>
-            <div class="camarguito-nose"></div>
-            <div class="camarguito-cheeks">
-              <div class="camarguito-cheek"></div>
-              <div class="camarguito-cheek"></div>
-            </div>
-            <div class="camarguito-teeth"></div>
-          </div>
+      <div class="flex items-center gap-3 mb-3 shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-blue-100 text-bcp-blue flex items-center justify-center text-xl font-bold">
+          <i class="fa-solid fa-scale-balanced"></i>
         </div>
         <div>
-          <h3 class="text-base font-extrabold text-[#002A8F] dark:text-blue-400">Guía Rápida de Camarguito</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Reglas clave para que tu cliente califique al 100%</p>
+          <h3 class="text-lg font-bold text-slate-800">Glosario Oficial: Filtros Básicos y Score</h3>
+          <p class="text-xs text-slate-500">¿Qué evalúa cada línea y cuándo se convierte en bloqueo?</p>
         </div>
       </div>
 
-      <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300">
-        <div class="p-3 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900/40">
-          <strong class="text-[#002A8F] dark:text-blue-400 block mb-0.5"><i class="fa-solid fa-check-circle text-emerald-500 mr-1"></i> 1. Capacidad por Boleta (Neto Disponible)</strong>
-          La cuota del crédito solicitada debe ser menor o igual a tu <strong>Neto Disponible</strong>. Si no califica, prueba incrementando el plazo a 72 meses o reduciendo el monto.
+      <div class="overflow-y-auto space-y-3 pr-2 text-xs flex-1">
+        <div class="border rounded-lg p-3 bg-slate-50">
+          <h4 class="font-bold text-bcp-navy text-sm">1. Archivo Negativo - Fuerte / Deudas SBS / Deudas BCP</h4>
+          <p class="text-slate-600 mt-1">Registros de listas negras, juicios activos, fraude o morosidad grave histórica reportada ante centrales de riesgo o internamente en el BCP. Es causal de rechazo tajante.</p>
         </div>
-        <div class="p-3 bg-orange-50/70 dark:bg-amber-950/30 rounded-xl border border-orange-100 dark:border-amber-900/40">
-          <strong class="text-[#FF7800] dark:text-orange-400 block mb-0.5"><i class="fa-solid fa-chart-pie mr-1"></i> 2. Control de Endeudamiento SBS</strong>
-          El ratio total no debe exceder el <strong>65%</strong> (o 50% en GORE Piura CAS). Si aparece <em>"Sobre endeudado"</em>, evalúa realizar compra de deuda para liberar margen.
+
+        <div class="border rounded-lg p-3 bg-slate-50">
+          <h4 class="font-bold text-bcp-navy text-sm">2. SBS - Clasificación / Pérdida / Vencido o Refinanciado</h4>
+          <p class="text-slate-600 mt-1">Evalúa la calificación en el sistema financiero (Normal 100%, CPP, Deficiente, Dudoso, Pérdida). Si tiene días de atraso significativos o créditos reestructurados en otras entidades, se bloquea.</p>
         </div>
-        <div class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700">
-          <strong class="text-slate-700 dark:text-slate-200 block mb-0.5"><i class="fa-solid fa-calendar-days text-indigo-500 mr-1"></i> 3. Fechas y Periodo de Gracia</strong>
-          Los créditos por convenio se pagan según el día de corte y planilla. La calculadora contempla los días acumulados entre el desembolso y el primer vencimiento.
+
+        <div class="border rounded-lg p-3 bg-slate-50">
+          <h4 class="font-bold text-bcp-navy text-sm">3. Cartera BCP (Castigada, Judicial, Prejudicial, Refinanciada)</h4>
+          <p class="text-slate-600 mt-1">Mide el historial directo con el banco. Si el cliente tiene deudas impagas enviadas a cobranza judicial o castigo contable en BCP, no se le puede otorgar nuevo crédito.</p>
+        </div>
+
+        <div class="border rounded-lg p-3 bg-slate-50">
+          <h4 class="font-bold text-bcp-navy text-sm">4. Bloqueos Activos y Pasivos BCP</h4>
+          <p class="text-slate-600 mt-1">Restricciones operativas en cuentas de ahorro (pasivos) o productos de crédito/tarjetas (activos), como embargos coactivos, homonimias o actualización obligatoria de datos.</p>
+        </div>
+
+        <div class="border rounded-lg p-3 bg-slate-50">
+          <h4 class="font-bold text-bcp-navy text-sm">5. Segmento</h4>
+          <p class="text-slate-600 mt-1">Verifica que el empleador o institución mantenga el <strong>Convenio vigente y activo</strong> con el BCP y que el colaborador califique para descuento por planilla.</p>
+        </div>
+
+        <div class="border rounded-lg p-3 bg-blue-50 border-blue-200">
+          <h4 class="font-bold text-bcp-navy text-sm">6. Score Credito Efectivo (Venta CEF LD/RE vs CdD)</h4>
+          <p class="text-slate-700 mt-1">
+            <strong>LD/RE (Línea Disponible / Retiro Efectivo):</strong> Crédito en efectivo de libre disponibilidad.<br>
+            <strong>CdD (Compra de Deuda):</strong> Consolidación o compra de saldos de otras entidades.<br>
+            <em>Nota didáctica:</em> Un cliente puede aprobar todos los filtros de riesgo pero tener la cruz en LD/RE o CdD si la campaña comercial no aprobó oferta para ese tipo de producto.
+          </p>
         </div>
       </div>
 
-      <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-center">
-        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-3">
-          Sistema creado por <strong>Luis Angel Garcia Cano (Lattis)</strong> - Analista Comercial-Back Office Senior
-        </p>
-        <button onclick="toggleCamarguitoHelp()" class="btn-bcp-orange text-white text-xs font-bold px-6 py-2.5 rounded-full shadow">
-          ¡Entendido, Camarguito!
+      <div class="mt-4 pt-2 border-t text-right shrink-0">
+        <button id="btnCloseCheatSheetBtn" class="px-4 py-2 bg-bcp-navy text-white text-xs font-semibold rounded-lg hover:bg-bcp-blue transition">
+          Entendido
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ================= MOTOR Y LÓGICA FINANCIERA ================= -->
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-bcp-navy text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-xl border border-white/20 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2 z-50">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMsg">Mensaje copiado correctamente</span>
+  </div>
+
   <script>
-    (function () {
-      "use strict";
+    // List of the 13 Basic Filters exactly as on the screen
+    const BASIC_FILTERS = [
+      { id: "f1", name: "Archivo Negativo - Fuerte", desc: "Listas de prevención de lavado, fraude o castigos severos." },
+      { id: "f2", name: "SBS- Clasificacion", desc: "Calificación crediticia en la SBS (Debe ser Normal)." },
+      { id: "f3", name: "SBS-Perdida o Judicial", desc: "Reporte de cobranza judicial o calificación Pérdida en el sistema." },
+      { id: "f4", name: "SBS- Vencido o Refinanciado", desc: "Atrasos vigentes o refinanciamientos en cualquier banco/caja." },
+      { id: "f5", name: "Archivo Negativo-Deudas SBS", desc: "Deuda impaga reportada formalmente en centrales de riesgo." },
+      { id: "f6", name: "Clasificacion BCP", desc: "Calificación interna del comportamiento crediticio en el BCP." },
+      { id: "f7", name: "Cartera BCP Castigada o Vendida", desc: "Créditos antiguos que BCP mandó a pérdida o vendió a terceros." },
+      { id: "f8", name: "Cartera BCP Judicial o Prejudicial", desc: "Cobranza legal activa con los estudios jurídicos del banco." },
+      { id: "f9", name: "Cartera BCP Refinanciada", desc: "Acuerdo de refinanciamiento vigente dentro del BCP." },
+      { id: "f10", name: "Otros Bloqueos Activos BCP", desc: "Trabas operativas en tarjetas o créditos del titular." },
+      { id: "f11", name: "Bloqueos Pasivos BCP", desc: "Retenciones judiciales o trabas en cuentas de ahorro/sueldo." },
+      { id: "f12", name: "Archivo Negativo -Deudas BCP", desc: "Deudas en mora vigentes directamente con el BCP." },
+      { id: "f13", name: "Segmento", desc: "Valida si el convenio con la empresa está habilitado y operativo." }
+    ];
 
-      // 1. CAPA DE SEGURIDAD
-      document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
-      document.addEventListener("keydown", function (e) {
-        if (e.keyCode === 123) { e.preventDefault(); return false; }
-        if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
-          e.preventDefault(); return false;
-        }
-        if (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83)) {
-          e.preventDefault(); return false;
-        }
-      });
+    // Scores
+    const SCORES = [
+      { id: "s1", name: "Venta CEF LD/RE", desc: "Score para Efectivo de Libre Disponibilidad / Retiro Efectivo." },
+      { id: "s2", name: "Venta CEF CdD", desc: "Score específico para Compra de Deuda." }
+    ];
 
-      // 2. MODO OSCURO (DARK MODE)
-      window.toggleDarkMode = function() {
-        const html = document.documentElement;
-        const icon = document.getElementById("darkIcon");
-        if (html.classList.contains("dark")) {
-          html.classList.remove("dark");
-          localStorage.setItem("theme", "light");
-          icon.className = "fa-solid fa-moon";
-        } else {
-          html.classList.add("dark");
-          localStorage.setItem("theme", "dark");
-          icon.className = "fa-solid fa-sun text-amber-400";
-        }
-      };
-
-      function initTheme() {
-        const savedTheme = localStorage.getItem("theme");
-        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const icon = document.getElementById("darkIcon");
-        if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
-          document.documentElement.classList.add("dark");
-          if (icon) icon.className = "fa-solid fa-sun text-amber-400";
-        } else {
-          document.documentElement.classList.remove("dark");
-          if (icon) icon.className = "fa-solid fa-moon";
-        }
+    /* 
+     Scenarios reproduction from screenshots:
+     - ideal: All checks (Image 1)
+     - no_score: 13 Filters OK, but scores both fail (Image 3)
+     - 1 to 10: Faithfully mapped from the 10 grid thumbnails in Image 2
+    */
+    const SCENARIOS = {
+      'ideal': {
+        name: "Caso Ideal: Aprobado Total",
+        tag: "100% Viable",
+        isApproved: true,
+        fails: [], // None
+        scoreFails: [],
+        speech: "¡Miren esto equipo, el sueño de todo asesor! El cliente pasa los 13 filtros básicos limpiecitos y tiene luz verde tanto en Libre Disponibilidad como en Compra de Deuda. Aquí no hay trabas: procedemos con el desembolso de inmediato.",
+        tip: "Cuando ambos scores están en verde, evalúa si le conviene más efectivo o compra de deuda con mejor tasa.",
+        verdict: "APROBADO PARA VENTA",
+        verdictType: "success",
+        verdictDesc: "El cliente califica para todas las modalidades de Crédito Convenio."
+      },
+      'no_score': {
+        name: "Caso Particular: Filtros OK, Sin Score",
+        tag: "Sin Oferta Comercial",
+        isApproved: false,
+        fails: [],
+        scoreFails: ["s1", "s2"],
+        speech: "¡Ojo al piojo con este caso! Miren bien: el cliente tiene todos los 13 filtros básicos con check verde, no le debe a nadie ni está manchado. Pero miren abajo: las dos opciones de Score están con equis roja. Quiere decir que el motor de riesgos no le calculó oferta comercial en esta campaña. ¡No se puede forzar la venta!",
+        tip: "No confundir un cliente con mal historial (filtros rojos) con uno sin oferta de campaña (score rojo).",
+        verdict: "RECHAZADO POR SCORE COMERCIAL",
+        verdictType: "warning",
+        verdictDesc: "El cliente tiene riesgo limpio pero no cuenta con campaña o score asignado para desembolso."
+      },
+      1: {
+        name: "Caso 1 (PPT): Doble Falla SBS & Activos",
+        tag: "Rechazado",
+        isApproved: false,
+        fails: ["f4", "f10"], // SBS Vencido o Refinanciado, Otros Bloqueos Activos BCP
+        scoreFails: [],
+        speech: "¡Atentos con el Caso 1! El cliente se cae en 'SBS - Vencido o Refinanciado' y en 'Otros Bloqueos Activos BCP'. Aunque sus dos scores están en verde, los filtros básicos mandan: con mora o refinanciamiento vigente en el sistema, la operación queda totalmente bloqueada.",
+        tip: "Cualquier cruz en los primeros 13 filtros tumba automáticamente la venta aunque el score marque verde.",
+        verdict: "RECHAZADO POR RIESGO",
+        verdictType: "danger",
+        verdictDesc: "Atraso en el sistema financiero y bloqueos internos impiden continuar."
+      },
+      2: {
+        name: "Caso 2 (PPT): Múltiples Bloqueos Severos",
+        tag: "Crítico",
+        isApproved: false,
+        fails: ["f2", "f7", "f11"], // SBS Clasificacion, Cartera Castigada, Bloqueos Pasivos
+        scoreFails: ["s1"], // Venta CEF LD/RE
+        speech: "¡Este Caso 2 es una bomba de tiempo! Tiene mala clasificación SBS, cartera castigada en BCP y bloqueos en sus cuentas pasivas. Encima no da para Libre Disponibilidad. El dictamen es rechazo rotundo sin opción a reclamo.",
+        tip: "La cartera castigada o vendida es una de las marcas más graves en el expediente del cliente.",
+        verdict: "RECHAZADO GRAVE",
+        verdictType: "danger",
+        verdictDesc: "Cliente con historial de castigo contable y mala calificación crediticia."
+      },
+      3: {
+        name: "Caso 3 (PPT): Judicial y Deuda BCP",
+        tag: "Rechazado Legal",
+        isApproved: false,
+        fails: ["f4", "f8", "f12"], // SBS Vencido, Cartera Judicial, Archivo Negativo Deudas BCP
+        scoreFails: ["s2"], // Venta CEF CdD
+        speech: "En el Caso 3 tenemos 'Cartera BCP Judicial o Prejudicial' y 'Deudas BCP'. Si el cliente ya está en proceso prejudicial con el propio banco, jamás se le otorgará una ampliación por convenio. Directo a regularización.",
+        tip: "Los casos judiciales deben ser derivados a las áreas de cobranza para amortización previa.",
+        verdict: "BLOQUEO JUDICIAL",
+        verdictType: "danger",
+        verdictDesc: "El cliente mantiene cobranza contenciosa con el banco."
+      },
+      4: {
+        name: "Caso 4 (PPT): Revisión Interna y Segmento PYME",
+        tag: "Revisión Supervisión",
+        isApproved: false,
+        fails: ["f1", "f6", "f13"], // Archivo Fuerte, Clasificacion BCP, Segmento
+        scoreFails: [],
+        speech: "¡Mucha atención con este Caso 4, equipo! Aquí el error común sería decir 'el convenio no está habilitado', pero ¡ojo! La realidad operativa es otra:<br><br>1️⃣ <strong>Primero:</strong> tiene 'Archivo Negativo - Fuerte'. Esto ya nos indica de arranque que no va a proceder el préstamo por diversos factores internos del banco.<br>2️⃣ <strong>Segundo:</strong> tiene mala 'Clasificación BCP'. En nuestra propia casa financiera no califica bien, lo cual es otro indicativo clave de freno.<br>3️⃣ <strong>Y tercero:</strong> en 'Segmento' nos bota cruz roja porque tiene segmentación PYME. Esto significa que tendría que hacer trámites y gestiones distintas por su canal correspondiente.<br><br><strong>¿Se puede consultar? ¡Sí!</strong> Igual se puede realizar la consulta, pero esto no se descarta a ciegas ni se le dice al cliente que su empresa no tiene convenio: esto entra como un <strong>AVISO DE REVISIÓN interna con Supervisión BCP</strong> para que nos den el veredicto final.",
+        tip: "No le digas al cliente que su empresa no tiene convenio: el filtro 'Segmento' aquí salta por pertenecer al segmento PYME (requiere trámites diferenciados) sumado a sus bloqueos internos BCP.",
+        verdict: "AVISO DE REVISIÓN: REVISIÓN INTERNA CON SUPERVISIÓN BCP",
+        verdictType: "warning",
+        verdictDesc: "El cliente no procede directamente por Archivo Negativo Fuerte y Clasificación BCP interna. Además presenta Segmentación PYME (requiere trámites adicionales). Requiere consulta y escalamiento interno con Supervisión BCP."
+      },
+      5: {
+        name: "Caso 5 (PPT): Pérdida SBS y Refinanciado",
+        tag: "Riesgo Alto",
+        isApproved: false,
+        fails: ["f3", "f9"], // SBS Pérdida o Judicial, Cartera Refinanciada BCP
+        scoreFails: ["s1"],
+        speech: "En el Caso 5 el sistema detectó 'SBS Pérdida o Judicial' y crédito refinanciado internamente. Además, el score de Libre Disponibilidad está tachado. El riesgo de impago es altísimo para el banco.",
+        tip: "Un cliente calificado como 'Pérdida' en la SBS tiene más de 120 días de mora en el sistema.",
+        verdict: "RECHAZADO POR MORA SBS",
+        verdictType: "danger",
+        verdictDesc: "Calificación de pérdida en la central de riesgos SBS."
+      },
+      6: {
+        name: "Caso 6 (PPT): Bloqueo Operativo Interno",
+        tag: "Rechazado",
+        isApproved: false,
+        fails: ["f4", "f10"], // SBS Vencido, Bloqueos activos
+        scoreFails: ["s2"], // Compra deuda
+        speech: "El Caso 6 muestra que aunque calificaría en LD/RE, el cliente tiene atrasos reportados y bloqueos activos. No podemos comprarle deudas ni desembolsar mientras figure vencido.",
+        tip: "Recuerda: los filtros básicos son condiciones de paso obligatorio; si uno falla, el score no sirve.",
+        verdict: "BLOQUEADO EN SISTEMA",
+        verdictType: "danger",
+        verdictDesc: "Atrasos vigentes impiden el uso de la línea comercial."
+      },
+      7: {
+        name: "Caso 7 (PPT): Deudas Externas y Bloqueos",
+        tag: "Alerta Riesgo",
+        isApproved: false,
+        fails: ["f5", "f10"], // Archivo Negativo Deudas SBS, Bloqueos Activos
+        scoreFails: [],
+        speech: "En el Caso 7, el 'Archivo Negativo - Deudas SBS' tiene la cruz roja. Esto significa que tiene deudas impagas vigentes en otras entidades financieras que saltaron en el filtro de riesgo.",
+        tip: "Deudas morosas en otras entidades bloquean el acceso al Crédito Convenio BCP.",
+        verdict: "DEUDA EXTERNA IMPAGA",
+        verdictType: "danger",
+        verdictDesc: "Reporte negativo por morosidad en el sistema financiero general."
+      },
+      8: {
+        name: "Caso 8 (PPT): Judicial SBS & Deudas BCP",
+        tag: "Inviable",
+        isApproved: false,
+        fails: ["f3", "f8", "f12"], // SBS Pérdida, Cartera BCP Judicial, Deudas BCP
+        scoreFails: ["s1"],
+        speech: "Caso 8: triple cruz en temas judiciales y deudas en mora con nosotros. Este perfil no califica bajo ninguna circunstancia y requiere pago total de sus obligaciones vencidas.",
+        tip: "Nunca prometas excepciones al cliente cuando hay procesos judiciales en curso.",
+        verdict: "RECHAZO NO NEGOCIABLE",
+        verdictType: "danger",
+        verdictDesc: "Procesos judiciales activos tanto en SBS como internamente en el BCP."
+      },
+      9: {
+        name: "Caso 9 (PPT): Clasificación & Bloqueo Pasivo",
+        tag: "Retención",
+        isApproved: false,
+        fails: ["f2", "f7", "f11"], // Clasif SBS, Castigada, Bloqueos Pasivos
+        scoreFails: [],
+        speech: "Miren el Caso 9: tiene Bloqueos Pasivos en sus cuentas. Muchas veces esto ocurre por mandatos de embargo judicial o coactivo sobre su cuenta sueldo. Aunque el score esté activo, no se puede operar.",
+        tip: "Los bloqueos pasivos protegen al banco ante posibles mandatos de retención judicial de terceros.",
+        verdict: "CUENTAS CON BLOQUEO",
+        verdictType: "danger",
+        verdictDesc: "El cliente presenta restricciones legales o de retención en sus cuentas."
+      },
+      10: {
+        name: "Caso 10 (PPT): Clasificación Interna BCP",
+        tag: "Sin Campaña",
+        isApproved: false,
+        fails: ["f6", "f12"], // Clasificacion BCP, Deudas BCP
+        scoreFails: ["s2"], // CdD
+        speech: "Cerramos con el Caso 10: el cliente se encuentra mal calificado internamente en el BCP y mantiene deudas pendientes en mora. No califica para Compra de Deuda y requiere ponerse al día.",
+        tip: "El comportamiento de pago interno en cuentas BCP pesa tanto o más que la central de riesgos SBS.",
+        verdict: "RECHAZO INTERNO BCP",
+        verdictType: "danger",
+        verdictDesc: "Mala conducta de pago en las tarjetas o préstamos del mismo BCP."
       }
+    };
 
-      // 3. MATRIZ OFICIAL DE CONVENIOS (Actualizada de Desprotegido_Nuevo_simulador.xlsx)
-      const CONVENIOS_DATA = Object.freeze([
-        {
-          "name": "AGRORURAL",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.12
-        },
-        {
-          "name": "ANA",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 30,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.109
-        },
-        {
-          "name": "CHAVIMOCHIC",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 24,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.11
-        },
-        {
-          "name": "DIRIS_Lima_Centro",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 31,
-          "venc": 15,
-          "reserva": 50,
-          "tea": 0.1099
-        },
-        {
-          "name": "DIRIS_Lima_Este",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.45,
-          "corte": 25,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.108
-        },
-        {
-          "name": "DIRIS_Lima_Norte",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.45,
-          "corte": 25,
-          "venc": 15,
-          "reserva": 50,
-          "tea": 0.1089
-        },
-        {
-          "name": "DIRESA_Cajamarca",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.103
-        },
-        {
-          "name": "DIRESA_Loreto",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.108
-        },
-        {
-          "name": "Ejército_del_Perú",
-          "pgBase": 2,
-          "pfBase": 3,
-          "rci": 0.47,
-          "corte": 30,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.109
-        },
-        {
-          "name": "EPSEL",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.115
-        },
-        {
-          "name": "Fuerza_Aerea_del_Perú",
-          "pgBase": 2,
-          "pfBase": 3,
-          "rci": 0.5,
-          "corte": 30,
-          "venc": 17,
-          "reserva": 35,
-          "tea": 0.111
-        },
-        {
-          "name": "GERESA_La_Libertad",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 24,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.108
-        },
-        {
-          "name": "Gobierno_Regional_Loreto",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.11
-        },
-        {
-          "name": "Gobierno_Regional_Piura",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 15,
-          "reserva": 100,
-          "tea": 0.115
-        },
-        {
-          "name": "GSR_Luciano_Castillo",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.11
-        },
-        {
-          "name": "Hospital_Cajamarca",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.105
-        },
-        {
-          "name": "Hospital_Chulucanas",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.11
-        },
-        {
-          "name": "Hospital_de_apoyo_Iquitos",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.11
-        },
-        {
-          "name": "Hospital_de_la_Amistad",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.118
-        },
-        {
-          "name": "Hospital_E_G_Barron",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 24,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.104
-        },
-        {
-          "name": "Hospital_Goyeneche",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 18,
-          "reserva": 100,
-          "tea": 0.108
-        },
-        {
-          "name": "Hospital_JAMO",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.108
-        },
-        {
-          "name": "Hospital_la_Caleta",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 24,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.104
-        },
-        {
-          "name": "Hospital_Regional_Lambayeque",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.108
-        },
-        {
-          "name": "Hospital_Regional_Loreto",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.1089
-        },
-        {
-          "name": "Hospital_San_Bartolome",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.12
-        },
-        {
-          "name": "Hospital_Sullana",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.108
-        },
-        {
-          "name": "Hospital_Trujillo",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 20,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.11
-        },
-        {
-          "name": "INSN",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.12
-        },
-        {
-          "name": "Marina_de_Guerra",
-          "pgBase": 2,
-          "pfBase": 3,
-          "rci": 0.5,
-          "corte": 4,
-          "venc": 15,
-          "reserva": 100,
-          "tea": 0.106
-        },
-        {
-          "name": "Ministerio_Defensa",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 30,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.13
-        },
-        {
-          "name": "Ministerio_Justicia",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 30,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.1089
-        },
-        {
-          "name": "Ministerio_Vivienda",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.115
-        },
-        {
-          "name": "Ministerio_Publico",
-          "pgBase": 2,
-          "pfBase": 3,
-          "rci": 0.5,
-          "corte": 30,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.107
-        },
-        {
-          "name": "Mun_Cerro_Colorado",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 30,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.1149
-        },
-        {
-          "name": "Municipalidad_Piura",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.117
-        },
-        {
-          "name": "ONPE",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 30,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.13
-        },
-        {
-          "name": "Policia_Nacional_del_Perú",
-          "pgBase": 2,
-          "pfBase": 3,
-          "rci": 0.45,
-          "corte": 4,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.1085
-        },
-        {
-          "name": "PRONABEC",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.15
-        },
-        {
-          "name": "PRONACEJ",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.115
-        },
-        {
-          "name": "REDIS_Chepen",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 24,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.104
-        },
-        {
-          "name": "Red_Salud_APLAO",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.108
-        },
-        {
-          "name": "RED_Salud_Arequipa_Caylloma",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.105
-        },
-        {
-          "name": "Red_Salud_Pacífico_Norte",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 24,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.105
-        },
-        {
-          "name": "Red_Salud_Pacífico_Sur",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 24,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.105
-        },
-        {
-          "name": "RENIEC",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 10,
-          "reserva": 0,
-          "tea": 0.105
-        },
-        {
-          "name": "SENASA",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.47,
-          "corte": 30,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.112
-        },
-        {
-          "name": "U_San_Juan_Bautista",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.3,
-          "corte": 25,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.117
-        },
-        {
-          "name": "UE403_Morropon",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 23,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.109
-        },
-        {
-          "name": "UESA_413_Ascope",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 24,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.104
-        },
-        {
-          "name": "UESA_406_Sanchez_Carrion",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 24,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.104
-        },
-        {
-          "name": "UE_Salud_Cajamarca",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 17,
-          "reserva": 0,
-          "tea": 0.108
-        },
-        {
-          "name": "UNAP",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 25,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.11
-        },
-        {
-          "name": "UTES_N6",
-          "pgBase": 1,
-          "pfBase": 2,
-          "rci": 0.5,
-          "corte": 24,
-          "venc": 15,
-          "reserva": 0,
-          "tea": 0.105
-        }
-      ]);
+    let activeScenarioKey = 'ideal';
+    let isQuizActive = false;
 
-      const CARGOS_POR_CONVENIO = Object.freeze({
-        "Ejército_del_Perú": [
-          "General de División",
-          "General de Brigada",
-          "Coronel",
-          "Teniente Coronel",
-          "Mayor",
-          "Capitán",
-          "Teniente",
-          "Sub Teniente",
-          "Técnico Jefe Superior",
-          "Técnico Jefe",
-          "Técnico de Primera",
-          "Técnico de Segunda",
-          "Técnico de Tercera",
-          "Suboficial Primera",
-          "Suboficial Segunda",
-          "Suboficial Tercera",
-          "Personal Administrativo"
-        ],
-        "Policia_Nacional_del_Perú": [
-          "Teniente General",
-          "General",
-          "Coronel",
-          "Comandante",
-          "Mayor",
-          "Capitán",
-          "Teniente",
-          "Alferez",
-          "Sub Oficial Superior",
-          "Sub Oficial Brigadier",
-          "Sub Oficial Técnico de Primera",
-          "Sub Oficial Técnico de Segunda",
-          "Sub Oficial Técnico de Tercera",
-          "Sub Oficial de Primera",
-          "Sub Oficial de Segunda",
-          "Sub Oficial de Tercera",
-          "Personal Administrativo"
-        ],
-        "Marina_de_Guerra": [
-          "Vicealmirante",
-          "Contralmirante",
-          "Capitán de Navío",
-          "Capitán de Fragata",
-          "Capitán de Corbeta",
-          "Teniente Primero",
-          "Teniente Segundo",
-          "Alferez de Fragata",
-          "Técnico Superior Primero",
-          "Técnico Superior Segundo",
-          "Técnico Primero",
-          "Técnico Segundo",
-          "Técnico Tercero",
-          "Oficial de Mar Primero",
-          "Oficial de Mar Segundo",
-          "Oficial de Mar Tercero",
-          "Administrativos"
-        ],
-        "RENIEC": [
-          "CAS Indeterminado",
-          "DS. Nro 001-98-TR"
-        ],
-        "DIRIS_Lima_Norte": [
-          "NPS Asistencial",
-          "PS Asistencial",
-          "NPS Administrativo",
-          "PS Administrativo",
-          "CAS Indeterminado"
-        ],
-        "Hospital_de_apoyo_Iquitos": [
-          "NPS Asistencial",
-          "PS Asistencial",
-          "NPS Administrativo",
-          "PS Administrativo",
-          "NPS CAS Asistencial",
-          "PS CAS Asistencial",
-          "NPS CAS Administrativo",
-          "PS CAS Administrativo"
-        ],
-        "ESSALUD": [
-          "Asistencial",
-          "Administrativo"
-        ],
-        "SENASA": [
-          "Nombrado",
-          "CAS Indeterminado",
-          "CAS Regular"
-        ],
-        "ONPE": [
-          "CAP Nombrado",
-          "CAP Indeterminado",
-          "CAS Indeterminado"
-        ],
-        "U_San_Juan_Bautista": [
-          "Indeterminado"
-        ],
-        "DIRIS_Lima_Centro": [
-          "NPS Asistencial",
-          "PS Asistencial",
-          "NPS Administrativo",
-          "PS Administrativo",
-          "CAS Indeterminado"
-        ],
-        "Ministerio_Defensa": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "UE403_Morropon": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "Fuerza_Aerea_del_Perú": [
-          "Teniente General",
-          "Mayor General",
-          "Coronel",
-          "Comandante",
-          "Mayor General",
-          "Capitan",
-          "Teniente",
-          "Alferez",
-          "Técnico Supervisor",
-          "Técnico Inspector",
-          "Técnico de Primera",
-          "Técnico de Segunda",
-          "Técnico de Tercera",
-          "Suboficial de Primera",
-          "Suboficial de Segunda",
-          "Suboficial de Tercera",
-          "Personal Administrativo"
-        ],
-        "EPSEL": [
-          "Ind_Administrativo",
-          "Ind_Obrero",
-          "Ind_Funcionario"
-        ],
-        "UNAP": [
-          "Nombrado",
-          "Indeterminado",
-          "CAS Indeterminado"
-        ],
-        "Hospital_Regional_Loreto": [
-          "Nombrado Asistencial",
-          "Nombrado Administrativo",
-          "CAS Indeterminado"
-        ],
-        "Red_Salud_APLAO": [
-          "Nombrado Asistencial Médico",
-          "Nombrado Profesional de Salud",
-          "Nombrado Técnico Asistencial",
-          "Administrativos",
-          "CAS_Indeterminado"
-        ],
-        "UTES_N6": [
-          "Nombrado Asistencial",
-          "Nombrado Administrativo",
-          "CAS Indeterminado"
-        ],
-        "Gobierno_Regional_Loreto": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ],
-        "DIRIS_Lima_Este": [
-          "Asistencial",
-          "Asistencial",
-          "Administrativo",
-          "Administrativo",
-          "CAS Indeterminado"
-        ],
-        "PRONABEC": [
-          "CAS Indeterminado"
-        ],
-        "AGRORURAL": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "CHAVIMOCHIC": [
-          "Nombrado"
-        ],
-        "GERESA_La_Libertad": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "Hospital_San_Bartolome": [
-          "Nombrado Asistencial",
-          "Nombrado Administrativo",
-          "CAS Indeterminado"
-        ],
-        "Hospital_Goyeneche": [
-          "Asistencial",
-          "Asistencial",
-          "Administrativo",
-          "Administrativo",
-          "CAS Indeterminado"
-        ],
-        "Ministerio_Vivienda": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "GSR_Luciano_Castillo": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "Red_Salud_Pacífico_Norte": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "Red_Salud_Pacífico_Sur": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "Ministerio_Justicia": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "Mun_Cerro_Colorado": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "Hospital_de_la_Amistad": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "Hospital_Cajamarca": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "ANA": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "Hospital_Trujillo": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "Municipalidad_Piura": [
-          "Nombrado",
-          "CAS Indeterminado"
-        ],
-        "Gobierno_Regional_Piura": [
-          "Nombrado",
-          "Administrativo",
-          "Obrero Permanente",
-          "Contrato por Servicios Personales",
-          "CAS Indeterminado"
-        ],
-        "Hospital_Regional_Lambayeque": [
-          "Nombrados",
-          "Administrativos",
-          "CAS Indeterminado"
-        ],
-        "DIRESA_Cajamarca": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ],
-        "Hospital_Chulucanas": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ],
-        "PRONACEJ": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ],
-        "Hospital_Sullana": [
-          "Nombrados",
-          "Indeterminados",
-          "CAS Indeterminados"
-        ],
-        "INSN": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ],
-        "DIRESA_Loreto": [
-          "Nombrado",
-          "Indeterminado",
-          "Tesoro Público",
-          "CAS Indeterminado"
-        ],
-        "RED_Salud_Arequipa_Caylloma": [
-          "Nombrado Médico",
-          "Nombrado Profesional Salud",
-          "Nombrado Técnico asistencial",
-          "Nombrado Administrativo",
-          "Cas Indeterminado Médico",
-          "Cas Indeterminado Profesional Salud",
-          "Cas Indeterminado Técnico asistencial",
-          "Cas Indeterminado Administrativo"
-        ],
-        "Hospital_JAMO": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ],
-        "Hospital_la_Caleta": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ],
-        "UESA_413_Ascope": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ],
-        "UESA_406_Sanchez_Carrion": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ],
-        "Hospital_E_G_Barron": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ],
-        "REDIS_Chepen": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ],
-        "Ministerio_Publico": [
-          "UE002 - Nombrado",
-          "UE002 - Nombrados provisionales",
-          "UE002 - Plazo Indeterminado",
-          "UE002 - CAS Indeterminado",
-          "UE003 - Nombrado",
-          "UE003 - Nombrados provisionales",
-          "UE003 - Plazo Indeterminado",
-          "UE003 - CAS Indeterminado",
-          "UE005 - Nombrado",
-          "UE005 - Nombrados provisionales",
-          "UE005 - Plazo Indeterminado",
-          "UE005 - CAS Indeterminado",
-          "UE006 - Nombrado",
-          "UE006 - Nombrados provisionales",
-          "UE006 - Plazo Indeterminado",
-          "UE006 - CAS Indeterminado",
-          "UE012 - Nombrado",
-          "UE012 - Nombrados provisionales",
-          "UE012 - Plazo Indeterminado",
-          "UE012 - CAS Indeterminado"
-        ],
-        "UE_Salud_Cajamarca": [
-          "Nombrados",
-          "CAS Indeterminado"
-        ]
-      });
+    function renderTables() {
+      const filtersContainer = document.getElementById('filtersContainer');
+      const scoresContainer = document.getElementById('scoresContainer');
+      const current = SCENARIOS[activeScenarioKey];
 
-      const TIPOS_DEUDA = Object.freeze([
-        { id: "hipotecario", label: "Crédito Hipotecario", factorFijo: 0.011, factorPorc: 0.01 },
-        { id: "efectivo", label: "Crédito Efectivo", factorFijo: 0.044, factorPorc: 0 },
-        { id: "vehicular", label: "Crédito Vehicular", factorFijo: 0.024, factorPorc: 0.035 },
-        { id: "pyme", label: "Pyme", factorFijo: 0.088, factorPorc: 0.022 },
-        { id: "comercial", label: "Comercial", factorFijo: 0.028, factorPorc: 0 },
-        { id: "indirecta", label: "Deuda Indirecta", factorFijo: 0.000694, factorPorc: 0.0006944 },
-        { id: "tc_utilizada", label: "Línea utilizada de tarjeta de Crédito", factorFijo: 0.007417, factorPorc: 0.078 },
-        { id: "tc_no_utilizada", label: "Línea no utilizada", factorFijo: 0.007417, factorPorc: 0.003306, factorLNU: 0.0065833922 }
-      ]);
+      // 1. Basic Filters
+      filtersContainer.innerHTML = '';
+      BASIC_FILTERS.forEach((filter, index) => {
+        const isFail = current.fails.includes(filter.id);
+        const bgClass = index % 2 === 0 ? 'bg-bcp-rowOdd' : 'bg-bcp-rowEven';
+        const highlightClass = isFail ? 'highlight-fail' : '';
 
-      let camarguitoGloboCerrado = true;
+        const row = document.createElement('div');
+        row.className = `grid grid-cols-12 items-center filter-clickable ${bgClass} ${highlightClass} transition-colors`;
+        row.onclick = () => showFilterInfo(filter);
 
-      document.addEventListener("DOMContentLoaded", () => {
-        initTheme();
-        initConveniosSelect();
-        initDeudasTable();
-        vincularEventos();
-
-        // Parámetros oficiales por defecto de la Carátula del Excel
-        document.getElementById("selConvenio").value = "GSR_Luciano_Castillo";
-        actualizarCargosPorConvenio();
-        document.getElementById("selCargo").value = "CAS Indeterminado";
-        document.getElementById("inpIngresos").value = "3264.19";
-        document.getElementById("inpLey").value = "424.34";
-        document.getElementById("inpFacultativos").value = "101.58";
-        document.getElementById("inpMonto").value = "66900";
-        document.getElementById("selPlazo").value = "72";
-        document.getElementById("inpTEA").value = "11.00";
-        document.getElementById("inpFechaDesembolso").value = "2026-10-07";
-        
-        // Deudas precargadas oficiales con cuadre a 3.51% y S/ 1,683.88
-        const noBcpTcUt = document.getElementById("nobcp_tc_utilizada");
-        if (noBcpTcUt) noBcpTcUt.value = "89";
-        const saldoTcUt = document.getElementById("saldo_tc_utilizada");
-        if (saldoTcUt) saldoTcUt.value = "1029";
-
-        const noBcpTcNoUt = document.getElementById("nobcp_tc_no_utilizada");
-        if (noBcpTcNoUt) noBcpTcNoUt.value = "7";
-        const saldoTcNoUt = document.getElementById("saldo_tc_no_utilizada");
-        if (saldoTcNoUt) saldoTcNoUt.value = "971";
-
-        recalcular();
-      });
-
-      function initConveniosSelect() {
-        const sel = document.getElementById("selConvenio");
-        sel.innerHTML = "";
-        CONVENIOS_DATA.forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c.name;
-          opt.textContent = c.name.replace(/_/g, " ");
-          if (c.name === "GSR_Luciano_Castillo") opt.selected = true;
-          sel.appendChild(opt);
-        });
-        actualizarCargosPorConvenio();
-      }
-
-      function actualizarCargosPorConvenio() {
-        const conv = document.getElementById("selConvenio").value;
-        const selCargo = document.getElementById("selCargo");
-        selCargo.innerHTML = "";
-
-        let cargos = CARGOS_POR_CONVENIO[conv] || ["CAS Indeterminado", "Nombrado", "Indeterminado", "Administrativo"];
-
-        cargos.forEach((cg) => {
-          const opt = document.createElement("option");
-          opt.value = cg;
-          opt.textContent = cg;
-          if (cg === "CAS Indeterminado") opt.selected = true;
-          selCargo.appendChild(opt);
-        });
-      }
-
-      function initDeudasTable() {
-        const tbody = document.getElementById("tblDeudasBody");
-        tbody.innerHTML = "";
-        TIPOS_DEUDA.forEach(d => {
-          const tr = document.createElement("tr");
-          tr.className = "hover:bg-blue-50/40 dark:hover:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 transition-colors";
-          tr.innerHTML = `
-            <td class="p-2.5 border-r border-slate-100 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300">${d.label}</td>
-            <td class="p-1 border-r border-slate-100 dark:border-slate-800"><input type="number" id="bcp_${d.id}" placeholder="" step="0.01" class="w-full text-center p-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-1 focus:ring-[#002A8F] dark:focus:ring-blue-500 font-mono text-xs"></td>
-            <td class="p-1 border-r border-slate-100 dark:border-slate-800"><input type="number" id="nobcp_${d.id}" placeholder="" step="0.01" class="w-full text-center p-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-1 focus:ring-[#002A8F] dark:focus:ring-blue-500 font-mono text-xs"></td>
-            <td class="p-1 border-r border-slate-100 dark:border-slate-800"><input type="number" id="saldo_${d.id}" placeholder="" step="0.01" class="w-full text-center p-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-1 focus:ring-[#002A8F] dark:focus:ring-blue-500 font-mono text-xs"></td>
-            <td class="p-1 border-r border-slate-100 dark:border-slate-800"><input type="number" id="saldoAct_${d.id}" placeholder="" step="0.01" class="w-full text-center p-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-1 focus:ring-[#002A8F] dark:focus:ring-blue-500 font-mono text-xs"></td>
-            <td class="p-2.5 text-right font-extrabold text-[#002A8F] dark:text-blue-400" id="cuota_${d.id}">S/ -</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-
-      function vincularEventos() {
-        document.getElementById("selConvenio").addEventListener("change", () => {
-          actualizarCargosPorConvenio();
-          actualizarTEAAutomatica();
-          recalcular();
-        });
-
-        document.getElementById("selCargo").addEventListener("change", () => {
-          actualizarTEAAutomatica();
-          recalcular();
-        });
-
-        const inputs = [
-          "inpIngresos", "inpVarMes", "inpVar3m", "inpCafae", "inpNoConstantes",
-          "inpLey", "inpFacultativos", "inpMonto", "selPlazo", "inpTEA", "selDesgravamen", "inpFechaDesembolso"
-        ];
-        inputs.forEach(id => {
-          document.getElementById(id).addEventListener("input", recalcular);
-        });
-
-        TIPOS_DEUDA.forEach(d => {
-          document.getElementById(`bcp_${d.id}`).addEventListener("input", recalcular);
-          document.getElementById(`nobcp_${d.id}`).addEventListener("input", recalcular);
-          document.getElementById(`saldo_${d.id}`).addEventListener("input", recalcular);
-          document.getElementById(`saldoAct_${d.id}`).addEventListener("input", recalcular);
-        });
-
-        document.getElementById("inpExcelMasivo").addEventListener("change", procesarArchivoMasivo);
-      }
-
-      function actualizarTEAAutomatica() {
-        const convNombre = document.getElementById("selConvenio").value;
-        const cargo = document.getElementById("selCargo").value;
-        const convData = CONVENIOS_DATA.find(c => c.name === convNombre);
-        if (!convData) return;
-
-        if (convNombre === "Policia_Nacional_del_Perú") {
-          if (cargo.includes("Sub Oficial de Tercera")) {
-            document.getElementById("inpTEA").value = "11.00";
-          } else {
-            document.getElementById("inpTEA").value = "10.85";
-          }
-        } else {
-          document.getElementById("inpTEA").value = (convData.tea * 100).toFixed(2);
-        }
-      }
-
-      function addMonths(date, months) {
-        const d = new Date(date.getTime());
-        d.setMonth(d.getMonth() + months);
-        return d;
-      }
-
-      function diffDays(d1, d2) {
-        const utc1 = Date.UTC(d1.getFullYear(), d1.getMonth(), d1.getDate());
-        const utc2 = Date.UTC(d2.getFullYear(), d2.getMonth(), d2.getDate());
-        return Math.round((utc1 - utc2) / (1000 * 60 * 60 * 24));
-      }
-
-      function calcularPGSCC(convenioObj, fechaDesembStr) {
-        if (!convenioObj || !fechaDesembStr) return 0;
-        const diaDesemb = parseInt(fechaDesembStr.split("-")[2], 10) || 1;
-        const name = convenioObj.name;
-        const corte = convenioObj.corte;
-        const venc = convenioObj.venc;
-
-        if (name === "Ejército_del_Perú" || name === "Fuerza_Aerea_del_Perú" || name === "Ministerio_Publico") {
-          return diaDesemb <= venc ? 2 : 1;
-        }
-        if (name === "Marina_de_Guerra" || name === "Policia_Nacional_del_Perú") {
-          if (diaDesemb <= corte) return 1;
-          if (diaDesemb > corte && diaDesemb <= venc) return 2;
-          return 1;
-        }
-        if (["ANA", "Ministerio_Defensa", "Ministerio_Justicia", "Mun_Cerro_Colorado", "ONPE"].includes(name)) {
-          return diaDesemb <= venc ? 1 : 0;
-        }
-        if (diaDesemb <= venc) return 1;
-        if (diaDesemb > venc && diaDesemb <= corte) return 0;
-        return 1;
-      }
-
-      // Fórmulas exactas sincronizadas con Base!D, Base!E y Cronograma!L23 / Cáratula!K66
-      function calcularCuotaExactaConvenio(monto, plazo, tea, desgravamenMensual, fechaDesembStr, convenioObj) {
-        if (!monto || monto <= 0 || !plazo || plazo <= 0) return 0;
-
-        const fParts = fechaDesembStr.split("-");
-        const fDesemb = new Date(parseInt(fParts[0], 10), parseInt(fParts[1], 10) - 1, parseInt(fParts[2], 10));
-        const dayDesemb = fDesemb.getDate();
-
-        const diaCorte = convenioObj.corte;
-        const diaVenc = convenioObj.venc;
-        const pgBase = convenioObj.pgBase || 1;
-
-        // Periodo de gracia 1 (D69)
-        let pg1 = 1;
-        if (["Policia_Nacional_del_Perú", "Marina_de_Guerra", "Ejército_del_Perú", "Fuerza_Aerea_del_Perú"].includes(convenioObj.name)) {
-          pg1 = 2;
-        } else if (["ANA", "Ministerio_Defensa", "Ministerio_Justicia", "Mun_Cerro_Colorado", "ONPE", "PRONABEC", "PRONACEJ", "RENIEC", "SENASA", "U_San_Juan_Bautista"].includes(convenioObj.name)) {
-          pg1 = 1;
-        } else {
-          pg1 = (diaCorte > diaVenc) ? (dayDesemb > diaCorte ? pgBase + 1 : pgBase) : (dayDesemb > diaCorte ? pgBase + 1 : pgBase);
-        }
-
-        // Periodo final 1 (D71)
-        let pf1 = 2;
-        if (["ANA", "Ministerio_Defensa", "Ministerio_Justicia", "Mun_Cerro_Colorado", "ONPE"].includes(convenioObj.name)) {
-          pf1 = 2;
-        } else if (convenioObj.name === "Ejército_del_Perú" || convenioObj.name === "Fuerza_Aerea_del_Perú") {
-          pf1 = 3;
-        } else if (diaCorte > diaVenc) {
-          pf1 = (dayDesemb > diaCorte) ? (pgBase + 2) : (pgBase + 1);
-        } else {
-          pf1 = (dayDesemb > diaCorte) ? (pgBase + 1) : pgBase;
-        }
-
-        // Primer vencimiento (G38)
-        const fBaseVenc = addMonths(fDesemb, pf1);
-        const fPrimerVenc = new Date(fBaseVenc.getFullYear(), fBaseVenc.getMonth(), diaVenc);
-
-        const tna365 = (Math.pow(1 + tea, 1 / 12) - 1) * 12 * (365 / 360);
-        const tasaDesgAnual = desgravamenMensual * 12;
-        const iDiario = tna365 / 365;
-        const dDiario = tasaDesgAnual / 365;
-
-        const k41 = iDiario * 31;
-        const p41 = dDiario * 31;
-        const k64 = (k41 + p41) / (1 - Math.pow(1 + k41 + p41, -plazo));
-
-        const c23 = fPrimerVenc;
-        const c22 = addMonths(c23, -1);
-        const c21 = addMonths(c22, -1);
-
-        const isPnpOMg = (convenioObj.name === "Policia_Nacional_del_Perú" || convenioObj.name === "Marina_de_Guerra");
-        const condVaciaC20 = (dayDesemb > diaVenc) || (isPnpOMg && dayDesemb < 5);
-        let tieneC20 = false;
-        let c20 = null;
-
-        if (!condVaciaC20 && pg1 === 2) {
-          tieneC20 = true;
-          c20 = addMonths(c21, -1);
-        }
-
-        let j20 = 0, i20 = 0;
-        if (tieneC20) {
-          const d20 = diffDays(c20, fDesemb);
-          const f20 = monto;
-          const g20 = f20;
-          const h20 = iDiario * d20;
-          i20 = h20 * f20;
-          j20 = g20 * dDiario * d20;
-        }
-
-        const d21 = diffDays(c21, fDesemb);
-        const e21 = !tieneC20 ? d21 : diffDays(c21, c20);
-        const f21 = monto;
-        const g21 = f21;
-        const h21 = iDiario * e21;
-        const i21 = h21 * f21;
-        const j21 = !tieneC20 ? (f21 * e21 * dDiario) : (dDiario * e21 * monto);
-
-        const e22 = diffDays(c22, c21);
-        const g22 = !tieneC20 ? (g21 + (iDiario * e22 * g21) + (dDiario * e22 * g21)) : (g21 + i21 + j21);
-        const f22 = !tieneC20 ? g21 : g22;
-        const h22 = iDiario * e22;
-        const i22 = h22 * f22;
-        const j22 = !tieneC20 ? (dDiario * e22 * g21) : (dDiario * e22 * g22);
-
-        const f23 = g22;
-        const g23 = !tieneC20 ? g22 : (g22 + i22 + j22);
-
-        let k66 = 0;
-        if (!tieneC20) {
-          k66 = (f23 + j21 + j22) * k64;
-        } else {
-          k66 = (g23 + j20 + j21 + j22) * k64;
-        }
-
-        // Cronograma!W24 = 4.00 soles (Portes y administración)
-        const w24 = 4.0;
-        return k66 + w24;
-      }
-
-      function recalcular() {
-        const convNombre = document.getElementById("selConvenio").value;
-        const cargo = document.getElementById("selCargo").value;
-        const conv = CONVENIOS_DATA.find(c => c.name === convNombre) || CONVENIOS_DATA[0];
-        const fechaDesembStr = document.getElementById("inpFechaDesembolso").value || "2026-10-07";
-
-        // Reglas oficiales de RCI (Sincronizadas con Cáratula!$J$11:$L$14)
-        let rci = conv.rci;
-        if (convNombre === "Policia_Nacional_del_Perú") {
-          if (cargo === "Sub Oficial de Tercera menor a 55 años") rci = 0.30;
-          else if (cargo === "Sub Oficial de Tercera") rci = 0.40;
-          else rci = 0.45;
-        } else if (convNombre === "UE_Salud_Cajamarca") {
-          rci = 0.47;
-        } else if (["DIRIS_Lima_Norte", "DIRIS_Lima_Centro", "DIRIS_Lima_Este", "INSN"].includes(convNombre) && cargo.includes("CAS")) {
-          rci = 0.40;
-        } else if ((convNombre === "RENIEC" && cargo.includes("CAS")) || 
-                   (convNombre === "Hospital_Sullana" && (cargo.includes("Nombrados") || cargo.includes("Indeterminados")))) {
-          rci = 0.45;
-        } else if (["UE403_Morropon", "Hospital_Sullana", "GSR_Luciano_Castillo", "Hospital_de_la_Amistad", "Hospital_Chulucanas"].includes(convNombre) && cargo.includes("CAS")) {
-          rci = 0.42;
-        } else if (["UE403_Morropon", "Hospital_Chulucanas", "GSR_Luciano_Castillo", "Hospital_de_la_Amistad"].includes(convNombre) && cargo.includes("Nombrado")) {
-          rci = 0.49;
-        } else if ((convNombre === "Ejército_del_Perú" && cargo.includes("Suboficial Tercera")) || 
-                   ((convNombre === "ANA" || convNombre === "Municipalidad_Piura") && cargo.includes("CAS"))) {
-          rci = 0.45;
-        } else if (convNombre === "U_San_Juan_Bautista") {
-          rci = 0.30;
-        }
-
-        document.getElementById("lblRCI").textContent = (rci * 100).toFixed(0) + "%";
-        document.getElementById("lblReserva").textContent = "S/ " + conv.reserva.toFixed(2);
-        document.getElementById("lblTEA").textContent = (parseFloat(document.getElementById("inpTEA").value) || (conv.tea * 100)).toFixed(2) + "%";
-
-        const pgSCC = calcularPGSCC(conv, fechaDesembStr);
-        document.getElementById("lblPGSCC").textContent = pgSCC + (pgSCC === 1 ? " mes" : " meses");
-
-        const G15 = parseFloat(document.getElementById("inpIngresos").value) || 0;
-        const G16 = parseFloat(document.getElementById("inpVarMes").value) || 0;
-        const G17 = parseFloat(document.getElementById("inpVar3m").value) || 0;
-        const G18 = parseFloat(document.getElementById("inpCafae").value) || 0;
-        const G21 = parseFloat(document.getElementById("inpNoConstantes").value) || 0;
-        const G24 = parseFloat(document.getElementById("inpLey").value) || 0;
-        const G29 = parseFloat(document.getElementById("inpFacultativos").value) || 0;
-        const G28 = conv.reserva;
-
-        // Reproducción exacta de la fórmula de Disponibilidad del Excel
-        let rciCalculo = rci;
-        // Si el convenio no tiene excepción evaluada antes de L13 en el Excel, replica exactamente K26 de la plantilla
-        let rciL13 = conv.rci;
-        if (["DIRIS_Lima_Norte", "DIRIS_Lima_Centro", "DIRIS_Lima_Este", "INSN"].includes(convNombre) && cargo.includes("CAS")) rciL13 = 0.40;
-        else if ((convNombre === "RENIEC" && cargo.includes("CAS")) || (convNombre === "Hospital_Sullana" && (cargo.includes("Nombrados") || cargo.includes("Indeterminados")))) rciL13 = 0.45;
-        else if (convNombre === "Policia_Nacional_del_Perú" && cargo === "Sub Oficial de Tercera") rciL13 = 0.40;
-        else if (convNombre === "Policia_Nacional_del_Perú" && cargo === "Sub Oficial de Tercera menor a 55 años") rciL13 = 0.30;
-        else if (convNombre === "UE_Salud_Cajamarca") rciL13 = 0.47;
-
-        let disponible = 0;
-        if (convNombre === "Ministerio_Justicia" && cargo.includes("CAS")) {
-          disponible = (G15 - G16 + (G17 * 0.5) + G18 - G21 - G24 - (G15 * 0.08)) * rci;
-        } else if (["Red_Salud_Pacífico_Sur", "Red_Salud_Pacífico_Norte", "UTES_N6", "DIRESA_Loreto", "Hospital_Cajamarca", "DIRESA_Cajamarca", "UE_Salud_Cajamarca"].includes(convNombre) && cargo.includes("CAS")) {
-          disponible = ((G15 - G16 + G17 + G18 - G21) * rci) - G24;
-        } else if (convNombre === "U_San_Juan_Bautista") {
-          disponible = G15 * rci;
-        } else {
-          // Utiliza rciL13 para cuadrar matemáticamente al céntimo con Cáratula!K26 del Excel
-          disponible = (G15 - G16 + (G17 * 0.5) + G18 - G21 - G24) * rciL13;
-        }
-
-        const deduccionExtra = (convNombre === "Ejército_del_Perú") ? 5 : 0;
-        let netoDisponible = disponible - G28 - G29 - deduccionExtra;
-        if (netoDisponible < 0) netoDisponible = 0;
-
-        let totalCuotasBCP = 0;
-        let totalCuotasActualizadasH = 0;
-        let sumaPonderadaK58 = 0;
-        let sumaCuotasDirectasK58 = 0;
-        let hayDatosCarga = false;
-
-        TIPOS_DEUDA.forEach(d => {
-          const valBcpStr = document.getElementById(`bcp_${d.id}`).value.trim();
-          const valNoBcpStr = document.getElementById(`nobcp_${d.id}`).value.trim();
-          const valSaldoStr = document.getElementById(`saldo_${d.id}`).value.trim();
-          const valSaldoActStr = document.getElementById(`saldoAct_${d.id}`).value.trim();
-
-          const D_val = valBcpStr !== "" ? parseFloat(valBcpStr) : null;
-          const E_val = valNoBcpStr !== "" ? parseFloat(valNoBcpStr) : null;
-          const F_val = valSaldoStr !== "" ? parseFloat(valSaldoStr) : null;
-          const G_val = valSaldoActStr !== "" ? parseFloat(valSaldoActStr) : null;
-
-          if (D_val !== null || E_val !== null || F_val !== null || G_val !== null) {
-            hayDatosCarga = true;
-          }
-
-          const d_num = D_val || 0;
-          const e_num = E_val || 0;
-          const f_num = F_val || 0;
-          const g_num = G_val || 0;
-
-          totalCuotasBCP += d_num;
-
-          let H_val = 0;
-          if (valNoBcpStr !== "" && valSaldoStr !== "" && valSaldoActStr !== "" && f_num > 0) {
-            if (d.id === "tc_no_utilizada") {
-              H_val = g_num * d.factorLNU;
-            } else {
-              H_val = (g_num / f_num) * e_num;
+        row.innerHTML = `
+          <div class="col-span-8 md:col-span-9 px-3 py-1.5 flex items-center justify-between text-slate-800">
+            <span class="font-normal hover:text-blue-700">${filter.name}</span>
+            <i class="fa-solid fa-circle-info text-[11px] text-slate-300 hover:text-blue-500"></i>
+          </div>
+          <div class="col-span-4 md:col-span-3 py-1 text-center font-bold flex items-center justify-center border-l border-blue-200">
+            ${isFail 
+              ? '<span class="cross-icon text-lg md:text-xl font-bold">✕</span>' 
+              : '<span class="check-icon text-lg md:text-xl font-bold">✔</span>'
             }
-          } else {
-            if (valNoBcpStr === "") {
-              H_val = g_num * d.factorFijo;
-            } else {
-              H_val = e_num;
+          </div>
+        `;
+        filtersContainer.appendChild(row);
+      });
+
+      // 2. Scores
+      scoresContainer.innerHTML = '';
+      SCORES.forEach((score, index) => {
+        const isFail = current.scoreFails.includes(score.id);
+        const bgClass = index % 2 === 0 ? 'bg-bcp-rowOdd' : 'bg-bcp-rowEven';
+        const highlightClass = isFail ? 'highlight-fail' : '';
+
+        const row = document.createElement('div');
+        row.className = `grid grid-cols-12 items-center filter-clickable ${bgClass} ${highlightClass} transition-colors`;
+        row.onclick = () => showFilterInfo(score);
+
+        row.innerHTML = `
+          <div class="col-span-8 md:col-span-9 px-3 py-1.5 flex items-center justify-between text-slate-800">
+            <span class="font-normal hover:text-blue-700">${score.name}</span>
+            <i class="fa-solid fa-circle-info text-[11px] text-slate-300 hover:text-blue-500"></i>
+          </div>
+          <div class="col-span-4 md:col-span-3 py-1 text-center font-bold flex items-center justify-center border-l border-blue-200">
+            ${isFail 
+              ? '<span class="cross-icon text-lg md:text-xl font-bold">✕</span>' 
+              : '<span class="check-icon text-lg md:text-xl font-bold">✔</span>'
             }
-          }
+          </div>
+        `;
+        scoresContainer.appendChild(row);
+      });
 
-          totalCuotasActualizadasH += H_val;
+      // Update Verdict and Trainer Text
+      updateRightPanel(current);
+    }
 
-          if (d.id === "hipotecario") sumaPonderadaK58 += (g_num / 100);
-          else if (d.factorPorc > 0) sumaPonderadaK58 += (g_num * d.factorPorc);
+    function updateRightPanel(current) {
+      const verdictCard = document.getElementById('verdictCard');
+      const verdictTitle = document.getElementById('verdictTitle');
+      const verdictIcon = document.getElementById('verdictIcon');
+      const verdictTag = document.getElementById('verdictTag');
+      const verdictSummary = document.getElementById('verdictSummary');
+      const metricFilters = document.getElementById('metricFilters');
+      const metricScores = document.getElementById('metricScores');
+      const trainerSpeechText = document.getElementById('trainerSpeechText');
+      const trainerTipText = document.getElementById('trainerTipText');
+      const clientStatusBadge = document.getElementById('clientStatusBadge');
 
-          sumaCuotasDirectasK58 += d_num + e_num;
+      trainerSpeechText.innerHTML = `"${current.speech}"`;
+      trainerTipText.textContent = current.tip;
 
-          const celdaCuota = document.getElementById(`cuota_${d.id}`);
-          if (H_val > 0) {
-            celdaCuota.textContent = "S/ " + H_val.toFixed(2);
-          } else {
-            celdaCuota.textContent = "S/ -";
-          }
+      const totalFiltersPassed = 13 - current.fails.length;
+      const totalScoresPassed = 2 - current.scoreFails.length;
+
+      metricFilters.textContent = `${totalFiltersPassed} de 13 aprobados`;
+      metricScores.textContent = `${totalScoresPassed} de 2 aprobados`;
+
+      if (current.isApproved) {
+        verdictCard.className = "bg-white rounded-xl shadow-md border-2 border-emerald-500 p-5 relative overflow-hidden transition-all duration-300";
+        verdictTitle.className = "text-xl font-extrabold text-emerald-700 flex items-center gap-2";
+        verdictIcon.className = "fa-solid fa-circle-check text-emerald-600";
+        verdictTag.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800";
+        clientStatusBadge.className = "mt-1 inline-block px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+        clientStatusBadge.textContent = "Califica para Oferta";
+      } else if (current.verdictType === 'warning') {
+        verdictCard.className = "bg-white rounded-xl shadow-md border-2 border-amber-500 p-5 relative overflow-hidden transition-all duration-300";
+        verdictTitle.className = "text-xl font-extrabold text-amber-700 flex items-center gap-2";
+        verdictIcon.className = "fa-solid fa-triangle-exclamation text-amber-600";
+        verdictTag.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800";
+        clientStatusBadge.className = "mt-1 inline-block px-2.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300";
+        clientStatusBadge.textContent = "Riesgo OK / Sin Oferta";
+      } else {
+        verdictCard.className = "bg-white rounded-xl shadow-md border-2 border-rose-500 p-5 relative overflow-hidden transition-all duration-300";
+        verdictTitle.className = "text-xl font-extrabold text-rose-700 flex items-center gap-2";
+        verdictIcon.className = "fa-solid fa-circle-xmark text-rose-600";
+        verdictTag.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800";
+        clientStatusBadge.className = "mt-1 inline-block px-2.5 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
+        clientStatusBadge.textContent = "Bloqueado por Riesgo";
+      }
+
+      verdictTitle.querySelector('span').textContent = current.verdict;
+      verdictTag.textContent = current.tag;
+      verdictSummary.textContent = current.verdictDesc;
+
+      // Update scenario buttons highlight
+      document.querySelectorAll('.scenario-pill').forEach(btn => {
+        const c = btn.getAttribute('data-case');
+        if (c == activeScenarioKey) {
+          btn.className = "scenario-pill px-2.5 py-1 rounded border font-semibold transition bg-bcp-blue text-white border-bcp-blue shadow-sm";
+        } else {
+          btn.className = "scenario-pill px-2 py-1 rounded border font-semibold transition bg-white text-slate-700 hover:bg-slate-100 border-slate-300";
+        }
+      });
+    }
+
+    window.loadScenario = function(key) {
+      activeScenarioKey = key;
+      renderTables();
+      const feedback = document.getElementById('quizAnswerFeedback');
+      feedback.classList.add('hidden');
+    };
+
+    // Next / Prev navigation
+    const scenarioKeysOrder = ['ideal', 'no_score', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    document.getElementById('btnNextCase').addEventListener('click', () => {
+      const idx = scenarioKeysOrder.indexOf(activeScenarioKey == 'ideal' || activeScenarioKey == 'no_score' ? activeScenarioKey : parseInt(activeScenarioKey));
+      const nextIdx = (idx + 1) % scenarioKeysOrder.length;
+      loadScenario(scenarioKeysOrder[nextIdx]);
+    });
+
+    document.getElementById('btnPrevCase').addEventListener('click', () => {
+      const idx = scenarioKeysOrder.indexOf(activeScenarioKey == 'ideal' || activeScenarioKey == 'no_score' ? activeScenarioKey : parseInt(activeScenarioKey));
+      const prevIdx = (idx - 1 + scenarioKeysOrder.length) % scenarioKeysOrder.length;
+      loadScenario(scenarioKeysOrder[prevIdx]);
+    });
+
+    // Copy Speech
+    document.getElementById('btnCopySpeech').addEventListener('click', () => {
+      const text = document.getElementById('trainerSpeechText').innerText;
+      copyToClipboard(text);
+    });
+
+    function copyToClipboard(text) {
+      const tempInput = document.createElement("textarea");
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+      showToast("Speech copiado al portapapeles");
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.textContent = message;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 2500);
+    }
+
+    // Cheat Sheet Modals
+    const cheatSheetModal = document.getElementById('cheatSheetModal');
+    document.getElementById('btnCheatSheet').addEventListener('click', () => cheatSheetModal.classList.remove('hidden'));
+    document.getElementById('btnCloseCheatSheet').addEventListener('click', () => cheatSheetModal.classList.add('hidden'));
+    document.getElementById('btnCloseCheatSheetBtn').addEventListener('click', () => cheatSheetModal.classList.add('hidden'));
+
+    function showFilterInfo(item) {
+      showToast(`Filtro "${item.name}": ${item.desc}`);
+    }
+
+    // Toggle Quiz Mode
+    const quizPanel = document.getElementById('quizPanel');
+    const btnToggleQuiz = document.getElementById('btnToggleQuiz');
+    const lblQuizToggle = document.getElementById('lblQuizToggle');
+
+    btnToggleQuiz.addEventListener('click', () => {
+      isQuizActive = !isQuizActive;
+      if (isQuizActive) {
+        quizPanel.classList.remove('hidden');
+        lblQuizToggle.textContent = "Ocultar Preguntas";
+        btnToggleQuiz.classList.replace('bg-emerald-600', 'bg-slate-700');
+      } else {
+        quizPanel.classList.add('hidden');
+        lblQuizToggle.textContent = "Modo Preguntas al Equipo";
+        btnToggleQuiz.classList.replace('bg-slate-700', 'bg-emerald-600');
+      }
+    });
+
+    window.testParticipantAnswer = function(saidYes) {
+      const current = SCENARIOS[activeScenarioKey];
+      const feedback = document.getElementById('quizAnswerFeedback');
+      feedback.classList.remove('hidden');
+
+      const isActuallyApproved = current.isApproved;
+
+      if (saidYes === isActuallyApproved) {
+        feedback.className = "p-3 rounded-lg text-xs leading-snug bg-emerald-900/80 text-emerald-200 border border-emerald-600";
+        feedback.innerHTML = `🎉 <strong>¡Respuesta Correcta del Equipo!</strong> ${isActuallyApproved 
+          ? 'El cliente tiene 13/13 filtros y scores válidos. ¡Procede al desembolso!' 
+          : 'Efectivamente NO califica. ' + current.verdictDesc}`;
+      } else {
+        feedback.className = "p-3 rounded-lg text-xs leading-snug bg-rose-900/80 text-rose-200 border border-rose-600";
+        feedback.innerHTML = `❌ <strong>¡Cuidado con la respuesta!</strong> ${isActuallyApproved 
+          ? 'El cliente SÍ califica porque tiene todos los checks verdes habilitados.' 
+          : 'El cliente NO puede desembolsar. Motivo: ' + current.verdictDesc}`;
+      }
+    };
+
+    // Full screen
+    document.getElementById('btnFullScreen').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {
+          showToast("Pantalla completa no disponible");
         });
-
-        const baseEndeudamiento = (G15 - G21 + G18 - G24 - G29);
-        let porcEndeudamiento = 0;
-        let K58 = 0;
-
-        if (baseEndeudamiento > 0 && hayDatosCarga) {
-          K58 = (sumaPonderadaK58 + sumaCuotasDirectasK58) / baseEndeudamiento;
-          porcEndeudamiento = K58;
-        }
-
-        // Tope de Endeudamiento con excepción para Ministerio Público (70%)
-        let topeEndeudamiento = 0.65;
-        if (convNombre === "Gobierno_Regional_Piura" && cargo.includes("CAS")) topeEndeudamiento = 0.50;
-        if (convNombre === "Ministerio_Publico") topeEndeudamiento = 0.70;
-        if (convNombre === "UTES_N6") topeEndeudamiento = 0.70;
-
-        document.getElementById("lblTopeEndeudamiento").textContent = (topeEndeudamiento * 100).toFixed(0) + "%";
-
-        const cem = ((G15 - G16 + G17 + G18 - G21 - G24 - G29) * topeEndeudamiento) - totalCuotasActualizadasH - totalCuotasBCP;
-        const dictamenSBS = (K58 <= topeEndeudamiento) ? "Continuar" : "Sobre endeudado";
-
-        if (K58 > 0) {
-          document.getElementById("lblPorcEndeudamiento").textContent = (porcEndeudamiento * 100).toFixed(2) + "%";
-          document.getElementById("resEndeudamiento").textContent = (porcEndeudamiento * 100).toFixed(2) + "%";
-        } else {
-          document.getElementById("lblPorcEndeudamiento").textContent = "-";
-          document.getElementById("resEndeudamiento").textContent = "-";
-        }
-
-        document.getElementById("lblCEM").textContent = "S/ " + Math.max(0, cem).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        document.getElementById("lblDictamenSBS").textContent = dictamenSBS;
-        document.getElementById("lblDictamenSBS").className = dictamenSBS === "Continuar" ? "font-extrabold text-emerald-600 dark:text-emerald-400 text-sm" : "font-extrabold text-red-600 dark:text-red-400 text-sm";
-
-        const monto = parseFloat(document.getElementById("inpMonto").value) || 0;
-        const plazo = parseInt(document.getElementById("selPlazo").value) || 72;
-        const tea = (parseFloat(document.getElementById("inpTEA").value) || (conv.tea * 100)) / 100;
-        const desgravamen = parseFloat(document.getElementById("selDesgravamen").value) || 0.000767;
-
-        const cuota = calcularCuotaExactaConvenio(monto, plazo, tea, desgravamen, fechaDesembStr, conv);
-
-        document.getElementById("resNetoDisp").textContent = "S/ " + netoDisponible.toFixed(2);
-        document.getElementById("resCuota").textContent = "S/ " + cuota.toFixed(2);
-
-        evaluarDictamen(dictamenSBS, cuota, netoDisponible, cem);
-        actualizarMensajeCamarguito(dictamenSBS, cuota, netoDisponible, cem);
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
       }
+    });
 
-      function evaluarDictamen(dictamenSBS, cuota, netoDisponible, cem) {
-        const card = document.getElementById("cardResultado");
-        const txt = document.getElementById("txtResultado");
-        const sub = document.getElementById("subResultado");
-        const det = document.getElementById("detResultado");
-
-        if (dictamenSBS === "Sobre endeudado") {
-          card.className = "p-5 rounded-2xl shadow-md border badge-sobreendeudado flex flex-col sm:flex-row justify-between items-center gap-4 transition-all duration-300";
-          txt.textContent = "NO CALIFICA";
-          sub.textContent = "DICTAMEN: SOBRE ENDEUDADO";
-          det.textContent = "El cliente excede el ratio de endeudamiento permitido en el sistema financiero (SBS).";
-        } else if (cuota > netoDisponible) {
-          card.className = "p-5 rounded-2xl shadow-md border badge-liquidez flex flex-col sm:flex-row justify-between items-center gap-4 transition-all duration-300";
-          txt.textContent = "NO CALIFICA";
-          sub.textContent = "DICTAMEN: FALTA DE LIQUIDEZ";
-          det.textContent = `La cuota mensual (S/ ${cuota.toFixed(2)}) supera el neto disponible en boleta (S/ ${netoDisponible.toFixed(2)}).`;
-        } else if (cuota > cem) {
-          card.className = "p-5 rounded-2xl shadow-md border badge-liquidez flex flex-col sm:flex-row justify-between items-center gap-4 transition-all duration-300";
-          txt.textContent = "OBSERVADO";
-          sub.textContent = "DICTAMEN: EXCEDE CEM";
-          det.textContent = "La cuota supera la capacidad de endeudamiento máxima permisible.";
-        } else {
-          card.className = "p-5 rounded-2xl shadow-md border badge-califica flex flex-col sm:flex-row justify-between items-center gap-4 transition-all duration-300 glow-califica";
-          txt.textContent = "CALIFICA";
-          sub.textContent = "DICTAMEN: APROBADO";
-          det.textContent = "El cliente cuenta con liquidez suficiente en boleta y holgura en el sistema financiero.";
-        }
-      }
-
-      function actualizarMensajeCamarguito(dictamenSBS, cuota, netoDisponible, cem) {
-        const textElem = document.getElementById("camarguitoText");
-        if (!textElem) return;
-
-        if (dictamenSBS === "Sobre endeudado") {
-          textElem.innerHTML = "⚠️ <strong>¡Ojo con la SBS!</strong> Endeudamiento > 65%. Evalúa una <strong>Compra de Deuda</strong>.";
-        } else if (cuota > netoDisponible) {
-          const dif = (cuota - netoDisponible).toFixed(2);
-          textElem.innerHTML = `📉 <strong>Falta liquidez:</strong> Excede por <strong>S/ ${dif}</strong>. Aumenta a 72 meses o baja el monto.`;
-        } else if (cuota > cem) {
-          textElem.innerHTML = "⚠️ <strong>Tope CEM excedido:</strong> La cuota supera el límite CEM permitido.";
-        } else {
-          textElem.innerHTML = `🎉 <strong>¡Excelente!</strong> Califica con cuota de <strong>S/ ${cuota.toFixed(2)}</strong> y neto disponible de S/ ${netoDisponible.toFixed(2)}.`;
-        }
-
-        const bubble = document.getElementById("camarguitoBubble");
-        if (camarguitoGloboCerrado) {
-          bubble.classList.add("hidden");
-        }
-      }
-
-      window.cerrarCamarguitoGlobo = function(e) {
-        if (e) e.stopPropagation();
-        camarguitoGloboCerrado = true;
-        document.getElementById("camarguitoBubble").classList.add("hidden");
-      };
-
-      window.clickAvatarCamarguito = function(e) {
-        if (e) e.stopPropagation();
-        const bubble = document.getElementById("camarguitoBubble");
-        if (bubble.classList.contains("hidden")) {
-          camarguitoGloboCerrado = false;
-          bubble.classList.remove("hidden");
-        } else {
-          toggleCamarguitoHelp();
-        }
-      };
-
-      window.abrirCamarguitoManual = function() {
-        camarguitoGloboCerrado = false;
-        document.getElementById("camarguitoBubble").classList.remove("hidden");
-        toggleCamarguitoHelp();
-      };
-
-      window.toggleCamarguitoHelp = function() {
-        const modal = document.getElementById("modalCamarguito");
-        modal.classList.toggle("hidden");
-      };
-
-      window.cerrarModalFondo = function(e) {
-        if (e.target.id === "modalCamarguito") {
-          document.getElementById("modalCamarguito").classList.add("hidden");
-        }
-      };
-
-      window.switchTab = function(tab) {
-        if (tab === 'simulador') {
-          document.getElementById("tabSimulador").classList.remove("hidden");
-          document.getElementById("tabMasivo").classList.add("hidden");
-          document.getElementById("btnTabSimulador").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-[#002A8F] text-white shadow-sm transition-all duration-200 flex items-center";
-          document.getElementById("btnTabMasivo").className = "px-4 py-1.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-[#002A8F] dark:hover:text-blue-400 transition-all duration-200 flex items-center";
-        } else {
-          document.getElementById("tabSimulador").classList.add("hidden");
-          document.getElementById("tabMasivo").classList.remove("hidden");
-          document.getElementById("btnTabMasivo").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-[#002A8F] text-white shadow-sm transition-all duration-200 flex items-center";
-          document.getElementById("btnTabSimulador").className = "px-4 py-1.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-[#002A8F] dark:hover:text-blue-400 transition-all duration-200 flex items-center";
-        }
-      };
-
-      let datosEvaluadosMasivos = [];
-
-      function procesarArchivoMasivo(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          const data = new Uint8Array(evt.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
-
-          evaluarFilasExcel(json);
-        };
-        reader.readAsArrayBuffer(file);
-      }
-
-      function evaluarFilasExcel(filas) {
-        datosEvaluadosMasivos = [];
-        const tbody = document.getElementById("tblMasivoBody");
-        tbody.innerHTML = "";
-        const fechaDesembStr = document.getElementById("inpFechaDesembolso").value || "2026-10-07";
-
-        filas.forEach((f, idx) => {
-          const dni = f["DNI Cliente"] || f["DNI"] || f["Documento"] || `Cliente ${idx+1}`;
-          const nombre = f["Nombre Cliente"] || f["Cliente"] || f["Nombres"] || "S/N";
-          const convStr = (f["CONVENIO"] || f["Convenio"] || "GSR_Luciano_Castillo").toString().trim();
-          const ingresos = parseFloat(f["Ingresos"] || f["Total Ingresos"] || f["Remuneración"] || 3264.19) || 0;
-          const ley = parseFloat(f["Descuentos de Ley"] || f["Ley"] || 424.34) || 0;
-          const facult = parseFloat(f["Facultativos"] || f["Descuentos Facultativos"] || 101.58) || 0;
-          const monto = parseFloat(f["MONTO"] || f["Monto"] || 66900) || 0;
-          const plazo = parseInt(f["PLAZO"] || f["Plazo"] || 72, 10) || 72;
-
-          const matchConv = CONVENIOS_DATA.find(c => 
-            c.name.toLowerCase().includes(convStr.toLowerCase()) || 
-            convStr.toLowerCase().includes(c.name.toLowerCase())
-          ) || CONVENIOS_DATA[14];
-
-          const rci = matchConv.rci;
-          const disp = (ingresos - ley) * rci;
-          const dedExtra = (matchConv.name === "Ejército_del_Perú") ? 5 : 0;
-          const neto = Math.max(0, disp - matchConv.reserva - facult - dedExtra);
-
-          const cuota = calcularCuotaExactaConvenio(monto, plazo, matchConv.tea, 0.000767, fechaDesembStr, matchConv);
-
-          let estado = "Califica";
-          let motivo = "Aprobado por Liquidez";
-          let badgeClass = "badge-califica";
-
-          if (cuota > neto) {
-            estado = "No Califica";
-            motivo = "Falta de Liquidez en Boleta";
-            badgeClass = "badge-liquidez";
-          }
-
-          const registro = {
-            DNI: dni,
-            Nombre: nombre,
-            Convenio: matchConv.name,
-            Ingresos: ingresos,
-            NetoDisponible: neto.toFixed(2),
-            Monto: monto,
-            Cuota: cuota.toFixed(2),
-            Estado: estado,
-            Motivo: motivo
-          };
-          datosEvaluadosMasivos.push(registro);
-
-          const tr = document.createElement("tr");
-          tr.className = "hover:bg-blue-50/40 dark:hover:bg-slate-800/60 transition-colors";
-          tr.innerHTML = `
-            <td class="p-3 font-medium">${dni}</td>
-            <td class="p-3 font-bold text-slate-800 dark:text-slate-100">${nombre}</td>
-            <td class="p-3"><span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/60 text-[#002A8F] dark:text-blue-300 rounded-full text-[11px] font-bold border border-blue-100 dark:border-blue-900">${matchConv.name}</span></td>
-            <td class="p-3 text-right">S/ ${ingresos.toFixed(2)}</td>
-            <td class="p-3 text-right font-extrabold text-slate-700 dark:text-slate-300">S/ ${neto.toFixed(2)}</td>
-            <td class="p-3 text-right text-[#002A8F] dark:text-blue-400 font-bold">S/ ${monto.toFixed(2)}</td>
-            <td class="p-3 text-right font-black text-slate-900 dark:text-slate-50">S/ ${cuota.toFixed(2)}</td>
-            <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full font-bold text-[10px] ${badgeClass}">${estado.toUpperCase()}</span></td>
-            <td class="p-3 text-slate-500 dark:text-slate-400 font-medium">${motivo}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        document.getElementById("lblContadorMasivo").textContent = `${datosEvaluadosMasivos.length} Registros Evaluados`;
-      }
-
-      window.exportarExcelResultados = function() {
-        if (datosEvaluadosMasivos.length === 0) {
-          alert("Primero carga un archivo o genera datos para exportar.");
-          return;
-        }
-        const ws = XLSX.utils.json_to_sheet(datosEvaluadosMasivos);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Evaluacion_Convenios");
-        XLSX.writeFile(wb, "Reporte_Evaluacion_Convenios_Calificado.xlsx");
-      };
-
-    })();
+    // Initial load
+    renderTables();
   </script>
 </body>
 </html>
